@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ICU Dashboard Access - BedsideBot</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-blue: #4F7FFF;
+            --secondary-blue: #667eea;
+            --accent-green: #10b981;
+            --light-blue: #f0f4ff;
+            --soft-white: #fefeff;
+            --text-dark: #1f2937;
+            --text-light: #6b7280;
+            --border-light: #e5e7eb;
+            --success-green: #10b981;
+            --warning-orange: #f59e0b;
+            --danger-red: #ef4444;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-dark);
+        }
+
+        .access-container {
+            background: var(--soft-white);
+            border-radius: 16px;
+            box-shadow: 0 20px 50px -10px rgba(0, 0, 0, 0.3);
+            padding: 3rem;
+            max-width: 500px;
+            width: 90%;
+            text-align: center;
+            animation: slideUp 0.6s ease-out;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .access-header {
+            margin-bottom: 2rem;
+        }
+
+        .access-icon {
+            width: 80px;
+            height: 80px;
+            background: var(--primary-blue);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1.5rem;
+            font-size: 2rem;
+            color: white;
+        }
+
+        .access-title {
+            font-family: 'Poppins', sans-serif;
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--text-dark);
+            margin-bottom: 0.5rem;
+        }
+
+        .access-subtitle {
+            color: var(--text-light);
+            font-size: 1rem;
+            line-height: 1.5;
+        }
+
+        .access-options {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .access-btn {
+            padding: 1rem 2rem;
+            border-radius: 12px;
+            font-size: 1.125rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
+        }
+
+        .btn-primary {
+            background: var(--primary-blue);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--secondary-blue);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px -5px rgba(79, 127, 255, 0.4);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: var(--text-dark);
+            border-color: var(--border-light);
+        }
+
+        .btn-secondary:hover {
+            background: var(--light-blue);
+            border-color: var(--primary-blue);
+            transform: translateY(-2px);
+        }
+
+        .access-info {
+            background: var(--light-blue);
+            border-radius: 8px;
+            padding: 1rem;
+            margin-top: 1.5rem;
+            font-size: 0.875rem;
+            color: var(--text-light);
+            line-height: 1.5;
+        }
+
+        .info-icon {
+            color: var(--primary-blue);
+            margin-right: 0.5rem;
+        }
+
+        @media (max-width: 480px) {
+            .access-container {
+                padding: 2rem;
+            }
+
+            .access-title {
+                font-size: 1.5rem;
+            }
+
+            .access-btn {
+                font-size: 1rem;
+                padding: 0.875rem 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="access-container">
+        <div class="access-header">
+            <div class="access-icon">🏥</div>
+            <h1 class="access-title">ICU Dashboard Access</h1>
+            <p class="access-subtitle">Choose how you want to access the ICU monitoring dashboard</p>
+        </div>
+
+        <div class="access-options">
+            <a href="/icu_dashboard" class="access-btn btn-primary">
+                <span>📊</span>
+                <span>Open ICU Dashboard</span>
+            </a>
+            
+            <a href="/icu_dashboard" class="access-btn btn-secondary" target="_blank">
+                <span>🖥️</span>
+                <span>Open in New Window</span>
+            </a>
+            
+            <a href="/" class="access-btn btn-secondary">
+                <span>🏠</span>
+                <span>Back to Home</span>
+            </a>
+        </div>
+
+        <div class="access-info">
+            <span class="info-icon">ℹ️</span>
+            <strong>Note:</strong> The ICU Dashboard displays real-time patient requests and alerts. 
+            Keep this window open on a dedicated monitor for continuous monitoring.
+        </div>
+    </div>
+
+    <script>
+        // Auto-refresh dashboard link every 30 seconds to ensure connectivity
+        setInterval(() => {
+            fetch('/api/get_patients')
+                .then(response => response.json())
+                .then(data => {
+                    console.log('Dashboard connectivity check:', data);
+                })
+                .catch(error => {
+                    console.error('Dashboard connectivity issue:', error);
+                });
+        }, 30000);
+    </script>
+</body>
+</html>

@@ -1,0 +1,851 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BedsideBot - Patient Monitoring</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            overflow: hidden;
+            height: 100vh;
+            color: white;
+        }
+
+        .fullscreen-container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .top-bar {
+            background: rgba(0, 0, 0, 0.8);
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            backdrop-filter: blur(10px);
+            border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+            position: relative;
+        }
+        
+        .top-bar-controls {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 15px;
+        }
+
+        .patient-info {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .patient-avatar {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, #4CAF50, #45a049);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+
+        .patient-details h2 {
+            font-size: 24px;
+            margin-bottom: 5px;
+        }
+
+        .patient-details p {
+            color: #b0b0b0;
+            font-size: 14px;
+        }
+
+        .system-status {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 15px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            font-size: 12px;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        .status-active { background: #4CAF50; }
+        .status-listening { background: #2196F3; }
+        .status-tracking { background: #FF9800; }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        .main-content {
+            flex: 1;
+            display: flex;
+            position: relative;
+        }
+
+        .video-section {
+            flex: 1;
+            position: relative;
+            background: #000;
+        }
+
+        .video-feed {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .video-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            pointer-events: none;
+        }
+
+        .detection-info {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 15px;
+            border-radius: 10px;
+            backdrop-filter: blur(10px);
+            min-width: 200px;
+        }
+
+        .detection-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .detection-icon {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+        }
+
+        .control-panel {
+            width: 400px;
+            background: rgba(0, 0, 0, 0.9);
+            backdrop-filter: blur(20px);
+            border-left: 2px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+        }
+
+        .panel-header {
+            padding: 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            text-align: center;
+        }
+
+        .panel-header h3 {
+            font-size: 18px;
+            margin-bottom: 5px;
+        }
+
+        .panel-header p {
+            color: #b0b0b0;
+            font-size: 12px;
+        }
+
+        .action-grid {
+            flex: 1;
+            padding: 20px;
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 12px;
+            max-height: calc(100vh - 200px);
+            overflow-y: auto;
+        }
+
+        .action-button {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .action-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+            border-color: rgba(255, 255, 255, 0.4);
+        }
+
+        .action-button.active {
+            background: linear-gradient(135deg, #4CAF50, #45a049);
+            border-color: #4CAF50;
+            box-shadow: 0 0 30px rgba(76, 175, 80, 0.5);
+            animation: activeGlow 2s infinite;
+        }
+
+        @keyframes activeGlow {
+            0%, 100% { box-shadow: 0 0 30px rgba(76, 175, 80, 0.5); }
+            50% { box-shadow: 0 0 40px rgba(76, 175, 80, 0.8); }
+        }
+
+        .action-icon {
+            font-size: 32px;
+            margin-bottom: 10px;
+            display: block;
+        }
+
+        .action-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .action-subtitle {
+            font-size: 12px;
+            color: #b0b0b0;
+        }
+        
+        .trigger-info {
+            position: absolute;
+            bottom: 100px;
+            left: 20px;
+            background: rgba(33, 150, 243, 0.9);
+            padding: 10px 15px;
+            border-radius: 8px;
+            font-size: 12px;
+            color: white;
+            animation: fadeInOut 3s infinite;
+        }
+        
+        @keyframes fadeInOut {
+            0%, 100% { opacity: 0.7; }
+            50% { opacity: 1; }
+        }
+
+        .voice-indicator {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            width: 60px;
+            height: 60px;
+            background: rgba(33, 150, 243, 0.9);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            animation: voicePulse 1.5s infinite;
+        }
+
+        @keyframes voicePulse {
+            0%, 100% { transform: scale(1); opacity: 0.8; }
+            50% { transform: scale(1.1); opacity: 1; }
+        }
+
+        .emergency-alert {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(244, 67, 54, 0.95);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            animation: emergencyFlash 1s infinite;
+        }
+
+        @keyframes emergencyFlash {
+            0%, 100% { opacity: 0.95; }
+            50% { opacity: 0.8; }
+        }
+
+        .emergency-content {
+            text-align: center;
+            font-size: 48px;
+            font-weight: bold;
+        }
+
+        .notification-toast {
+            position: fixed;
+            top: 100px;
+            right: 30px;
+            background: rgba(0, 0, 0, 0.9);
+            padding: 15px 20px;
+            border-radius: 10px;
+            border-left: 4px solid #4CAF50;
+            transform: translateX(400px);
+            transition: transform 0.3s ease;
+            z-index: 1000;
+        }
+
+        .notification-toast.show {
+            transform: translateX(0);
+        }
+
+        .gesture-display {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.8);
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+            font-size: 24px;
+            display: none;
+        }
+
+        .exit-button {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(244, 67, 54, 0.9);
+            border: none;
+            color: white;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            z-index: 1001;
+        }
+
+        .exit-button:hover {
+            background: rgba(244, 67, 54, 1);
+        }
+        
+        .exit-button:nth-child(2):hover {
+            background: rgba(52, 152, 219, 1);
+        }
+
+        @media (max-width: 768px) {
+            .control-panel {
+                width: 100%;
+                height: 200px;
+                position: fixed;
+                bottom: 0;
+                left: 0;
+                right: 0;
+            }
+
+            .action-grid {
+                grid-template-columns: repeat(5, 1fr);
+                gap: 10px;
+                padding: 15px;
+            }
+
+            .action-button {
+                padding: 15px 10px;
+            }
+
+            .action-icon {
+                font-size: 24px;
+                margin-bottom: 5px;
+            }
+
+            .action-title {
+                font-size: 12px;
+            }
+
+            .action-subtitle {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="fullscreen-container">
+        <!-- Top Bar -->
+        <div class="top-bar">
+            <div class="patient-info">
+                <div class="patient-avatar">👤</div>
+                <div class="patient-details">
+                    <h2 id="patientName">Loading...</h2>
+                    <p id="bedNumber">Bed: --</p>
+                </div>
+            </div>
+            
+            <div class="top-bar-controls">
+                <button class="exit-button" onclick="toggleFullscreen()" style="position: static; background: rgba(52, 152, 219, 0.9);">Toggle Fullscreen</button>
+                <button class="exit-button" onclick="exitFullscreen()" style="position: static;">Exit Monitoring</button>
+            </div>
+            
+            <div class="system-status">
+                <div class="status-indicator">
+                    <div class="status-dot status-active"></div>
+                    <span>System Active</span>
+                </div>
+                <div class="status-indicator" id="voiceStatus">
+                    <div class="status-dot status-listening"></div>
+                    <span>Voice Listening</span>
+                </div>
+                <div class="status-indicator" id="handStatus">
+                    <div class="status-dot status-tracking"></div>
+                    <span>Hand Tracking</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Video Section -->
+            <div class="video-section">
+                <img src="/video_feed" class="video-feed" id="videoFeed" alt="Patient Video Feed">
+                
+                <!-- Video Overlay -->
+                <div class="video-overlay">
+                    <div class="detection-info">
+                        <div class="detection-item">
+                            <div class="detection-icon" style="background: #4CAF50;"></div>
+                            <span id="handGesture">Hand: None</span>
+                        </div>
+                        <div class="detection-item">
+                            <div class="detection-icon" style="background: #2196F3;"></div>
+                            <span id="voiceCommand">Voice: Listening...</span>
+                        </div>
+                        <div class="detection-item">
+                            <div class="detection-icon" style="background: #FF9800;"></div>
+                            <span id="eyeGaze">Gaze: Center</span>
+                        </div>
+                        <div class="detection-item">
+                            <div class="detection-icon" style="background: #9C27B0;"></div>
+                            <span id="systemFPS">FPS: --</span>
+                        </div>
+                        <div class="detection-item">
+                            <div class="detection-icon" style="background: #FF5722;"></div>
+                            <span id="lastAction">Last: None</span>
+                        </div>
+                        <div class="detection-item" id="bufferTimer" style="display: none;">
+                            <div class="detection-icon" style="background: #FFC107;"></div>
+                            <span id="bufferText">Next in: 0.0s</span>
+                        </div>
+                    </div>
+
+                    <div class="gesture-display" id="gestureDisplay">
+                        <div id="gestureText">✋ 5 Fingers Detected</div>
+                    </div>
+                </div>
+
+                <!-- Voice Indicator -->
+                <div class="voice-indicator" id="voiceIndicator">🎤</div>
+                
+                <div class="trigger-info" id="triggerInfo">
+                    💬 Say: "water", "food", "help", "bathroom", "emergency"
+                </div>
+            </div>
+
+            <!-- Control Panel -->
+            <div class="control-panel">
+                <div class="panel-header">
+                    <h3>Patient Actions</h3>
+                    <p>Detected requests will highlight automatically</p>
+                </div>
+                
+                <div class="action-grid">
+                    <div class="action-button" data-action="1">
+                        <span class="action-icon">👩‍⚕️</span>
+                        <div class="action-title">Call Nurse</div>
+                        <div class="action-subtitle">1 Finger</div>
+                    </div>
+                    
+                    <div class="action-button" data-action="2">
+                        <span class="action-icon">💧</span>
+                        <div class="action-title">Water</div>
+                        <div class="action-subtitle">2 Fingers</div>
+                    </div>
+                    
+                    <div class="action-button" data-action="3">
+                        <span class="action-icon">🍽️</span>
+                        <div class="action-title">Food</div>
+                        <div class="action-subtitle">3 Fingers</div>
+                    </div>
+                    
+                    <div class="action-button" data-action="4">
+                        <span class="action-icon">🚿</span>
+                        <div class="action-title">Bathroom</div>
+                        <div class="action-subtitle">4 Fingers</div>
+                    </div>
+                    
+                    <div class="action-button" data-action="5">
+                        <span class="action-icon">🚨</span>
+                        <div class="action-title">Emergency</div>
+                        <div class="action-subtitle">5 Fingers</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Emergency Alert -->
+    <div class="emergency-alert" id="emergencyAlert">
+        <div class="emergency-content">
+            🚨 EMERGENCY ALERT 🚨<br>
+            <div style="font-size: 24px; margin-top: 20px;">Patient needs immediate assistance!</div>
+        </div>
+    </div>
+
+    <!-- Notification Toast -->
+    <div class="notification-toast" id="notificationToast">
+        <div id="toastMessage">Action detected!</div>
+    </div>
+
+
+
+    <script>
+        let isFullscreen = false;
+        let buttonCheckInterval;
+        let voiceListeningInterval;
+        let currentAction = null;
+
+        // Load on DOM ready (no auto-fullscreen)
+        document.addEventListener('DOMContentLoaded', function() {
+            loadPatientInfo();
+            startMonitoring();
+        });
+
+        function enterFullscreen() {
+            const elem = document.documentElement;
+            if (elem.requestFullscreen) {
+                elem.requestFullscreen().catch(err => console.log('Fullscreen request failed:', err));
+            } else if (elem.webkitRequestFullscreen) {
+                elem.webkitRequestFullscreen();
+            } else if (elem.msRequestFullscreen) {
+                elem.msRequestFullscreen();
+            }
+            isFullscreen = true;
+        }
+
+        function exitFullscreen() {
+            if (confirm('Are you sure you want to stop monitoring?')) {
+                stopMonitoring();
+                if (document.fullscreenElement) {
+                    if (document.exitFullscreen) {
+                        document.exitFullscreen().catch(err => console.log('Exit fullscreen failed:', err));
+                    } else if (document.webkitExitFullscreen) {
+                        document.webkitExitFullscreen();
+                    } else if (document.msExitFullscreen) {
+                        document.msExitFullscreen();
+                    }
+                }
+                setTimeout(() => {
+                    window.location.href = '/modules';
+                }, 100);
+            }
+        }
+
+        function loadPatientInfo() {
+            // Load registered patients and show selection
+            fetch('/api/get_patients')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.patients && data.patients.length > 0) {
+                        // Use first patient or show selection dialog
+                        const patient = data.patients[0];
+                        document.getElementById('patientName').textContent = patient.name;
+                        document.getElementById('bedNumber').textContent = `Bed: ${patient.bed_number}`;
+                        
+                        // Start monitoring for this patient
+                        startPatientMonitoring(patient.name, patient.bed_number);
+                    } else {
+                        document.getElementById('patientName').textContent = 'No Patient Registered';
+                        document.getElementById('bedNumber').textContent = 'Please register a patient first';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading patient info:', error);
+                    document.getElementById('patientName').textContent = 'Error Loading Patient';
+                });
+        }
+        
+        function startPatientMonitoring(patientName, bedNumber) {
+            // Start monitoring with patient data
+            fetch('/start_monitoring', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    patientName: patientName,
+                    bedNumber: bedNumber,
+                    features: ['Hand Sign Detection', 'Voice Recognition', 'Face Detection']
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Monitoring started:', data);
+            })
+            .catch(error => {
+                console.error('Error starting monitoring:', error);
+            });
+        }
+
+        function startMonitoring() {
+            // Start continuous button polling
+            startButtonPolling();
+            
+            // Start continuous voice listening
+            startContinuousVoiceListening();
+            
+            showNotification('Monitoring started - System is now active');
+        }
+
+        function startButtonPolling() {
+            if (buttonCheckInterval) {
+                clearInterval(buttonCheckInterval);
+            }
+
+            buttonCheckInterval = setInterval(() => {
+                fetch('/get_selected_button')
+                    .then(response => response.json())
+                    .then(data => {
+                        updateActionButtons(data.button);
+                        updateDetectionInfo(data);
+                        updateSystemStats();
+                        updateBufferTimer(data.time_remaining);
+                        
+                        if (data.button) {
+                            // Always process new inputs, don't block on currentAction
+                            if (data.button !== currentAction || !currentAction) {
+                                currentAction = data.button;
+                                handleActionDetected(data.button, data.text);
+                            }
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error polling for button:', error);
+                    });
+            }, 100); // Poll every 100ms for faster response
+        }
+
+        function startContinuousVoiceListening() {
+            // Continuous voice listening without user interaction
+            function listenForVoice() {
+                fetch('/listen_voice', { method: 'POST' })
+                    .then(response => response.json())
+                    .then(data => {
+                        updateVoiceStatus(data);
+                        
+                        if (data.status === 'success' && data.button) {
+                            // Always process voice commands immediately
+                            handleActionDetected(data.button, data.command);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Voice listening error:', error);
+                    })
+                    .finally(() => {
+                        // Restart voice listening immediately
+                        setTimeout(listenForVoice, 100);
+                    });
+            }
+            
+            // Start the continuous listening loop
+            listenForVoice();
+        }
+
+        function updateActionButtons(activeButton) {
+            // Don't clear previous selections - allow multiple active buttons
+            if (activeButton) {
+                const activeBtn = document.querySelector(`.action-button[data-action="${activeButton}"]`);
+                if (activeBtn && !activeBtn.classList.contains('active')) {
+                    activeBtn.classList.add('active');
+                    // Keep active for 3 seconds to show buffer period
+                    setTimeout(() => {
+                        activeBtn.classList.remove('active');
+                    }, 3000);
+                }
+            }
+        }
+
+        function updateDetectionInfo(data) {
+            // Update hand gesture display
+            if (data.button) {
+                document.getElementById('handGesture').textContent = `Hand: ${data.button} finger(s)`;
+                document.getElementById('lastAction').textContent = `Last: ${data.text}`;
+                showGestureDisplay(`✋ ${data.button} Finger(s) Detected`);
+            } else {
+                document.getElementById('handGesture').textContent = 'Hand: None';
+            }
+        }
+        
+        function updateSystemStats() {
+            const now = Date.now();
+            if (!window.lastStatsUpdate || now - window.lastStatsUpdate > 1000) {
+                window.lastStatsUpdate = now;
+                document.getElementById('systemFPS').textContent = 'FPS: 30+';
+            }
+        }
+
+        function updateVoiceStatus(data) {
+            const voiceCommand = document.getElementById('voiceCommand');
+            const voiceIndicator = document.getElementById('voiceIndicator');
+            const triggerInfo = document.getElementById('triggerInfo');
+            
+            if (data.status === 'success') {
+                voiceCommand.textContent = `Voice: "${data.command}"`;
+                voiceIndicator.style.background = 'rgba(76, 175, 80, 0.9)';
+                triggerInfo.style.display = 'none';
+            } else if (data.status === 'trigger_only') {
+                voiceCommand.textContent = 'Voice: Trigger detected, say command';
+                voiceIndicator.style.background = 'rgba(255, 193, 7, 0.9)';
+                triggerInfo.style.display = 'block';
+            } else if (data.status === 'no_trigger') {
+                voiceCommand.textContent = 'Voice: Say "Bot I need..."';
+                voiceIndicator.style.background = 'rgba(33, 150, 243, 0.9)';
+                triggerInfo.style.display = 'block';
+            } else if (data.status === 'timeout') {
+                voiceCommand.textContent = 'Voice: Listening...';
+                voiceIndicator.style.background = 'rgba(33, 150, 243, 0.9)';
+                triggerInfo.style.display = 'block';
+            } else {
+                voiceCommand.textContent = 'Voice: Ready';
+                voiceIndicator.style.background = 'rgba(33, 150, 243, 0.9)';
+                triggerInfo.style.display = 'block';
+            }
+        }
+
+        function handleActionDetected(action, text) {
+            // Show notification with buffer info
+            showNotification(`Patient Request: ${text} - Next selection in 3 seconds`);
+            
+            // Handle emergency
+            if (action == 5) {
+                showEmergencyAlert();
+            }
+            
+            // Reset currentAction after 3 seconds to match buffer
+            setTimeout(() => {
+                currentAction = null;
+            }, 3000);
+        }
+
+        function showGestureDisplay(text) {
+            const gestureDisplay = document.getElementById('gestureDisplay');
+            const gestureText = document.getElementById('gestureText');
+            
+            gestureText.textContent = text;
+            gestureDisplay.style.display = 'block';
+            
+            setTimeout(() => {
+                gestureDisplay.style.display = 'none';
+            }, 1500);
+        }
+
+        function hideGestureDisplay() {
+            document.getElementById('gestureDisplay').style.display = 'none';
+        }
+
+        function showNotification(message) {
+            const toast = document.getElementById('notificationToast');
+            const toastMessage = document.getElementById('toastMessage');
+            
+            toastMessage.textContent = message;
+            toast.classList.add('show');
+            
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+
+        function showEmergencyAlert() {
+            const alert = document.getElementById('emergencyAlert');
+            alert.style.display = 'flex';
+            
+            // Auto-hide after 5 seconds
+            setTimeout(() => {
+                alert.style.display = 'none';
+            }, 5000);
+        }
+
+        function stopMonitoring() {
+            if (buttonCheckInterval) {
+                clearInterval(buttonCheckInterval);
+            }
+            
+            fetch('/stop_monitoring', { method: 'POST' })
+                .then(response => response.json())
+                .then(data => {
+                    console.log('Monitoring stopped:', data);
+                })
+                .catch(error => {
+                    console.error('Error stopping monitoring:', error);
+                });
+        }
+
+        // Toggle fullscreen function
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) {
+                enterFullscreen();
+            } else {
+                if (document.exitFullscreen) {
+                    document.exitFullscreen().catch(err => console.log('Exit fullscreen failed:', err));
+                }
+            }
+        }
+
+        // Handle fullscreen changes
+        document.addEventListener('fullscreenchange', function() {
+            if (!document.fullscreenElement) {
+                isFullscreen = false;
+            } else {
+                isFullscreen = true;
+            }
+        });
+
+        function updateBufferTimer(timeRemaining) {
+            const bufferTimer = document.getElementById('bufferTimer');
+            const bufferText = document.getElementById('bufferText');
+            
+            if (timeRemaining > 0) {
+                bufferTimer.style.display = 'flex';
+                bufferText.textContent = `Next in: ${timeRemaining.toFixed(1)}s`;
+            } else {
+                bufferTimer.style.display = 'none';
+            }
+        }
+
+        // Prevent accidental exit (optional)
+        // window.addEventListener('beforeunload', function(e) {
+        //     e.preventDefault();
+        //     e.returnValue = '';
+        // });
+    </script>
+</body>
+</html>

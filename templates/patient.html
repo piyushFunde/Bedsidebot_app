@@ -1,0 +1,1026 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Patient Registration - BedsideBot</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-blue: #4F7FFF;
+            --secondary-blue: #667eea;
+            --accent-green: #10b981;
+            --light-blue: #f0f4ff;
+            --soft-white: #fefeff;
+            --text-dark: #1f2937;
+            --text-light: #6b7280;
+            --border-light: #e5e7eb;
+            --success-green: #10b981;
+            --warning-red: #ef4444;
+            --patient-blue: #3b82f6;
+            --patient-cyan: #06b6d4;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: var(--text-dark);
+        }
+
+        /* Top Navigation Bar */
+        .top-nav {
+            background: var(--soft-white);
+            padding: 1rem 2rem;
+            box-shadow: var(--shadow);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .nav-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo-section {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            background: var(--primary-blue);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.5rem;
+        }
+
+        .logo-text {
+            font-family: 'Poppins', sans-serif;
+            font-size: 1.5rem;
+            font-weight: 700;
+            font-style: italic;
+            color: var(--text-dark);
+        }
+
+        .logo-subtitle {
+            font-size: 0.875rem;
+            color: var(--text-light);
+            font-weight: 400;
+        }
+
+        .security-badge {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--accent-green);
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        /* Progress Steps */
+        .progress-nav {
+            background: var(--soft-white);
+            padding: 1.5rem 2rem;
+            border-bottom: 1px solid var(--border-light);
+        }
+
+        .progress-content {
+            max-width: 800px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+        }
+
+        .step {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .step.active {
+            background: var(--patient-blue);
+            color: white;
+        }
+
+        .step.completed {
+            background: var(--accent-green);
+            color: white;
+        }
+
+        .step.inactive {
+            background: var(--border-light);
+            color: var(--text-light);
+        }
+
+        .step-number {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.875rem;
+            font-weight: 600;
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .step.active .step-number {
+            background: rgba(255, 255, 255, 0.9);
+            color: var(--patient-blue);
+        }
+
+        .step.completed .step-number {
+            background: rgba(255, 255, 255, 0.9);
+            color: var(--accent-green);
+        }
+
+        .step-text {
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        /* Main Container */
+        .main-container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .form-container {
+            background: var(--soft-white);
+            border-radius: 16px;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            overflow: hidden;
+            animation: slideUp 0.6s ease-out;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .form-header {
+            background: linear-gradient(135deg, var(--patient-blue), var(--patient-cyan));
+            color: white;
+            padding: 2rem;
+            text-align: center;
+        }
+
+        .form-title {
+            font-family: 'Poppins', sans-serif;
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .form-subtitle {
+            font-size: 1rem;
+            opacity: 0.9;
+        }
+
+        .form-content {
+            padding: 2rem;
+        }
+
+        /* Section Styling */
+        .form-section {
+            margin-bottom: 2rem;
+            animation: fadeInUp 0.6s ease-out;
+            animation-fill-mode: both;
+        }
+
+        .form-section:nth-child(1) { animation-delay: 0.1s; }
+        .form-section:nth-child(2) { animation-delay: 0.2s; }
+        .form-section:nth-child(3) { animation-delay: 0.3s; }
+        .form-section:nth-child(4) { animation-delay: 0.4s; }
+        .form-section:nth-child(5) { animation-delay: 0.5s; }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 2px solid var(--light-blue);
+        }
+
+        .section-icon {
+            width: 32px;
+            height: 32px;
+            background: var(--light-blue);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+        }
+
+        .section-title {
+            font-family: 'Poppins', sans-serif;
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--text-dark);
+        }
+
+        /* Form Grid */
+        .form-row {
+            display: grid;
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .form-row.single { grid-template-columns: 1fr; }
+        .form-row.double { grid-template-columns: 1fr 1fr; }
+        .form-row.triple { grid-template-columns: 1fr 1fr 1fr; }
+
+        /* Form Groups */
+        .form-group {
+            position: relative;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--text-dark);
+            margin-bottom: 0.5rem;
+        }
+
+        .required {
+            color: var(--warning-red);
+        }
+
+        .form-input, .form-select, .form-textarea {
+            width: 100%;
+            padding: 0.875rem 1rem;
+            border: 2px solid var(--border-light);
+            border-radius: 8px;
+            font-size: 1rem;
+            background: var(--soft-white);
+            transition: all 0.3s ease;
+            font-family: inherit;
+        }
+
+        .form-textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        .form-input:focus, .form-select:focus, .form-textarea:focus {
+            outline: none;
+            border-color: var(--patient-blue);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+            transform: translateY(-1px);
+        }
+
+        .form-input.valid, .form-select.valid, .form-textarea.valid {
+            border-color: var(--success-green);
+            background: rgba(16, 185, 129, 0.05);
+        }
+
+        .form-input.invalid, .form-select.invalid, .form-textarea.invalid {
+            border-color: var(--warning-red);
+            background: rgba(239, 68, 68, 0.05);
+            animation: shake 0.4s ease-in-out;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+        .error-message {
+            color: var(--warning-red);
+            font-size: 0.75rem;
+            margin-top: 0.5rem;
+            opacity: 0;
+            transform: translateY(-10px);
+            transition: all 0.3s ease;
+        }
+
+        .error-message.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Checkbox Groups */
+        .checkbox-group {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-top: 0.5rem;
+        }
+
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem;
+            border: 2px solid var(--border-light);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .checkbox-item:hover {
+            border-color: var(--patient-blue);
+            background: var(--light-blue);
+        }
+
+        .checkbox-item.checked {
+            border-color: var(--patient-blue);
+            background: var(--light-blue);
+        }
+
+        .checkbox-input {
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            border: 2px solid var(--border-light);
+            border-radius: 4px;
+            position: relative;
+            cursor: pointer;
+        }
+
+        .checkbox-input:checked {
+            background: var(--patient-blue);
+            border-color: var(--patient-blue);
+        }
+
+        .checkbox-input:checked::after {
+            content: '✓';
+            position: absolute;
+            top: -2px;
+            left: 2px;
+            color: white;
+            font-size: 0.875rem;
+            font-weight: bold;
+        }
+
+        .checkbox-label {
+            font-size: 0.875rem;
+            color: var(--text-dark);
+            cursor: pointer;
+        }
+
+        /* Submit Button */
+        .submit-section {
+            margin-top: 2rem;
+            padding-top: 2rem;
+            border-top: 1px solid var(--border-light);
+            text-align: center;
+        }
+
+        .submit-btn {
+            background: linear-gradient(135deg, var(--patient-blue), var(--patient-cyan));
+            color: white;
+            border: none;
+            padding: 1rem 3rem;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: var(--shadow);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .submit-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            transition: left 0.5s;
+        }
+
+        .submit-btn:hover::before {
+            left: 100%;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px -5px rgba(59, 130, 246, 0.4);
+        }
+
+        .submit-btn:disabled {
+            background: var(--text-light);
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .submit-btn:disabled::before {
+            display: none;
+        }
+
+        /* Success Modal */
+        .success-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.3s ease;
+        }
+
+        .success-modal.show {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .success-content {
+            background: white;
+            border-radius: 16px;
+            padding: 2rem;
+            text-align: center;
+            max-width: 400px;
+            width: 90%;
+            transform: scale(0.8);
+            transition: all 0.3s ease;
+        }
+
+        .success-modal.show .success-content {
+            transform: scale(1);
+        }
+
+        .success-icon {
+            width: 80px;
+            height: 80px;
+            background: var(--success-green);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1rem;
+            color: white;
+            font-size: 2rem;
+        }
+
+        .success-title {
+            font-family: 'Poppins', sans-serif;
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: var(--text-dark);
+        }
+
+        .success-subtitle {
+            color: var(--text-light);
+            margin-bottom: 1.5rem;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .nav-content {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .progress-content {
+                flex-wrap: wrap;
+                gap: 1rem;
+            }
+
+            .main-container {
+                padding: 1rem;
+            }
+
+            .form-content {
+                padding: 1.5rem;
+            }
+
+            .form-row.double,
+            .form-row.triple {
+                grid-template-columns: 1fr;
+            }
+
+            .checkbox-group {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .form-title {
+                font-size: 1.5rem;
+            }
+
+            .submit-btn {
+                padding: 0.875rem 2rem;
+                font-size: 0.875rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Top Navigation -->
+    <nav class="top-nav">
+        <div class="nav-content">
+            <div class="logo-section">
+                <div class="logo-icon">🏥</div>
+                <div>
+                    <div class="logo-text">BedsideBot</div>
+                    <div class="logo-subtitle">Multi-Assistant Healthcare System</div>
+                </div>
+            </div>
+            <div class="security-badge">
+                <span>🔒</span>
+                <span>Secure Registration</span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Progress Steps -->
+    <div class="progress-nav">
+        <div class="progress-content">
+            <div class="step completed" id="step1">
+                <div class="step-number">✓</div>
+                <div class="step-text">Hospital</div>
+            </div>
+            <div class="step completed" id="step2">
+                <div class="step-number">✓</div>
+                <div class="step-text">Staff</div>
+            </div>
+            <div class="step active" id="step3">
+                <div class="step-number">3</div>
+                <div class="step-text">Patient</div>
+            </div>
+            <div class="step inactive" id="step4">
+                <div class="step-number">4</div>
+                <div class="step-text">Caregiver</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Container -->
+    <div class="main-container">
+        <div class="form-container">
+            <div class="form-header">
+                <h1 class="form-title">Patient Registration</h1>
+                <p class="form-subtitle">Register patients for comprehensive care monitoring</p>
+            </div>
+
+            <div class="form-content">
+                <form id="patientForm" novalidate>
+                    <!-- Patient Information -->
+                    <div class="form-section">
+                        <div class="section-header">
+                            <div class="section-icon">👤</div>
+                            <h2 class="section-title">Patient Information</h2>
+                        </div>
+                        <div class="form-row double">
+                            <div class="form-group">
+                                <label class="form-label">Patient Name <span class="required">*</span></label>
+                                <input type="text" class="form-input" id="patientName" placeholder="Enter patient's full name" required>
+                                <div class="error-message">Patient name is required</div>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Patient ID <span class="required">*</span></label>
+                                <input type="text" class="form-input" id="patientId" placeholder="Enter unique patient ID" required>
+                                <div class="error-message">Patient ID is required</div>
+                            </div>
+                        </div>
+                        <div class="form-row triple">
+                            <div class="form-group">
+                                <label class="form-label">Date of Birth <span class="required">*</span></label>
+                                <input type="date" class="form-input" id="dateOfBirth" required>
+                                <div class="error-message">Date of birth is required</div>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Gender <span class="required">*</span></label>
+                                <select class="form-select" id="gender" required>
+                                    <option value="" disabled selected>Select gender</option>
+                                    <option value="male">Male</option>
+                                    <option value="female">Female</option>
+                                    <option value="other">Other</option>
+                                    <option value="prefer-not-to-say">Prefer not to say</option>
+                                </select>
+                                <div class="error-message">Please select gender</div>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Blood Type</label>
+                                <select class="form-select" id="bloodType">
+                                    <option value="" selected>Select blood type</option>
+                                    <option value="A+">A+</option>
+                                    <option value="A-">A-</option>
+                                    <option value="B+">B+</option>
+                                    <option value="B-">B-</option>
+                                    <option value="AB+">AB+</option>
+                                    <option value="AB-">AB-</option>
+                                    <option value="O+">O+</option>
+                                    <option value="O-">O-</option>
+                                    <option value="unknown">Unknown</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Medical Information -->
+                    <div class="form-section">
+                        <div class="section-header">
+                            <div class="section-icon">🩺</div>
+                            <h2 class="section-title">Medical Information</h2>
+                        </div>
+                        <div class="form-row double">
+                            <div class="form-group">
+                                <label class="form-label">Primary Condition <span class="required">*</span></label>
+                                <input type="text" class="form-input" id="primaryCondition" placeholder="Enter primary medical condition" required>
+                                <div class="error-message">Primary condition is required</div>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Mobility Level <span class="required">*</span></label>
+                                <select class="form-select" id="mobilityLevel" required>
+                                    <option value="" disabled selected>Select mobility level</option>
+                                    <option value="fully-mobile">Fully Mobile</option>
+                                    <option value="limited-mobility">Limited Mobility</option>
+                                    <option value="wheelchair-bound">Wheelchair Bound</option>
+                                    <option value="bedridden">Bedridden</option>
+                                    <option value="ambulatory-with-assistance">Ambulatory with Assistance</option>
+                                </select>
+                                <div class="error-message">Please select mobility level</div>
+                            </div>
+                        </div>
+                        <div class="form-row single">
+                            <div class="form-group">
+                                <label class="form-label">Medical History & Allergies</label>
+                                <textarea class="form-textarea" id="medicalHistory" placeholder="Enter relevant medical history, current medications, and known allergies"></textarea>
+                            </div>
+                        </div>
+                        <div class="form-row double">
+                            <div class="form-group">
+                                <label class="form-label">Attending Physician</label>
+                                <input type="text" class="form-input" id="attendingPhysician" placeholder="Enter attending physician's name">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Admission Date <span class="required">*</span></label>
+                                <input type="date" class="form-input" id="admissionDate" required>
+                                <div class="error-message">Admission date is required</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Hospital Assignment -->
+                    <div class="form-section">
+                        <div class="section-header">
+                            <div class="section-icon">🛏️</div>
+                            <h2 class="section-title">Hospital Assignment</h2>
+                        </div>
+                        <div class="form-row triple">
+                            <div class="form-group">
+                                <label class="form-label">Room Number <span class="required">*</span></label>
+                                <input type="text" class="form-input" id="roomNumber" placeholder="e.g., 101" required>
+                                <div class="error-message">Room number is required</div>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Bed Number <span class="required">*</span></label>
+                                <input type="text" class="form-input" id="bedNumber" placeholder="e.g., A, B, 1, 2" required>
+                                <div class="error-message">Bed number is required</div>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Department <span class="required">*</span></label>
+                                <select class="form-select" id="department" required>
+                                    <option value="" disabled selected>Select department</option>
+                                    <option value="icu">Intensive Care Unit (ICU)</option>
+                                    <option value="emergency">Emergency Department</option>
+                                    <option value="medical">Medical/General</option>
+                                    <option value="surgical">Surgical</option>
+                                    <option value="cardiology">Cardiology</option>
+                                    <option value="neurology">Neurology</option>
+                                    <option value="pediatrics">Pediatrics</option>
+                                    <option value="geriatrics">Geriatrics</option>
+                                    <option value="oncology">Oncology</option>
+                                    <option value="orthopedics">Orthopedics</option>
+                                    <option value="other">Other</option>
+                                </select>
+                                <div class="error-message">Please select department</div>
+                            </div>
+                        </div>
+                        <div class="form-row double">
+                            <div class="form-group">
+                                <label class="form-label">Assigned Nurse ID</label>
+                                <input type="text" class="form-input" id="assignedNurse" placeholder="Enter assigned nurse's ID">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Care Level <span class="required">*</span></label>
+                                <select class="form-select" id="careLevel" required>
+                                    <option value="" disabled selected>Select care level</option>
+                                    <option value="minimal">Minimal Care</option>
+                                    <option value="moderate">Moderate Care</option>
+                                    <option value="intensive">Intensive Care</option>
+                                    <option value="critical">Critical Care</option>
+                                    <option value="hospice">Hospice Care</option>
+                                </select>
+                                <div class="error-message">Please select care level</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Communication Preferences -->
+                    <div class="form-section">
+                        <div class="section-header">
+                            <div class="section-icon">💬</div>
+                            <h2 class="section-title">Communication Preferences</h2>
+                        </div>
+                        <p style="margin-bottom: 1rem; color: var(--text-light); font-size: 0.875rem;">
+                            Select all communication methods the patient can use with BedsideBot:
+                        </p>
+                        <div class="checkbox-group">
+                            <div class="checkbox-item" data-communication="voice">
+                                <input type="checkbox" class="checkbox-input" id="voice" name="communication" value="voice">
+                                <label class="checkbox-label" for="voice">Voice Commands</label>
+                            </div>
+                            <div class="checkbox-item" data-communication="hand-gestures">
+                                <input type="checkbox" class="checkbox-input" id="handGestures" name="communication" value="hand-gestures">
+                                <label class="checkbox-label" for="handGestures">Hand Gestures</label>
+                            </div>
+                            <div class="checkbox-item" data-communication="eye-tracking">
+                                <input type="checkbox" class="checkbox-input" id="eyeTracking" name="communication" value="eye-tracking">
+                                <label class="checkbox-label" for="eyeTracking">Eye Tracking</label>
+                            </div>
+                            <div class="checkbox-item" data-communication="facial-expressions">
+                                <input type="checkbox" class="checkbox-input" id="facialExpressions" name="communication" value="facial-expressions">
+                                <label class="checkbox-label" for="facialExpressions">Facial Expressions</label>
+                            </div>
+                        </div>
+                        <div class="form-row single" style="margin-top: 1.5rem;">
+                            <div class="form-group">
+                                <label class="form-label">Special Communication Notes</label>
+                                <textarea class="form-textarea" id="communicationNotes" placeholder="Enter any special communication needs, language preferences, or limitations"></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Submit Section -->
+                    <div class="submit-section">
+                        <button type="submit" class="submit-btn" id="submitBtn" disabled>
+                            Continue to Caregiver Registration →
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Success Modal -->
+    <div class="success-modal" id="successModal">
+        <div class="success-content">
+            <div class="success-icon">✅</div>
+            <h2 class="success-title">Patient Registered Successfully!</h2>
+            <p class="success-subtitle">Redirecting to caregiver registration...</p>
+        </div>
+    </div>
+
+    <script>
+        // Form validation and submission logic
+        const form = document.getElementById('patientForm');
+        const submitBtn = document.getElementById('submitBtn');
+        const successModal = document.getElementById('successModal');
+
+        // Required fields for validation
+        const requiredFields = [
+            'patientName', 'patientId', 'dateOfBirth', 'gender', 'primaryCondition',
+            'mobilityLevel', 'admissionDate', 'roomNumber', 'bedNumber', 
+            'department', 'careLevel'
+        ];
+
+        // Validation patterns
+        const validationPatterns = {
+            email: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+            phone: /^[\+]?[1-9][\d]{0,15}$/
+        };
+
+        // Calculate age from date of birth
+        function calculateAge(birthDate) {
+            const today = new Date();
+            const birth = new Date(birthDate);
+            let age = today.getFullYear() - birth.getFullYear();
+            const monthDiff = today.getMonth() - birth.getMonth();
+            
+            if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
+                age--;
+            }
+            
+            return age;
+        }
+
+        // Validate individual field
+        function validateField(fieldId) {
+            const field = document.getElementById(fieldId);
+            const errorMsg = field.parentNode.querySelector('.error-message');
+            const value = field.value.trim();
+            
+            let isValid = true;
+            let errorText = '';
+
+            // Check if required field is empty
+            if (requiredFields.includes(fieldId) && !value) {
+                isValid = false;
+                errorText = 'This field is required';
+            }
+            // Specific validations
+            else if (fieldId === 'dateOfBirth' && value) {
+                const birthDate = new Date(value);
+                const today = new Date();
+                const age = calculateAge(value);
+                
+                if (birthDate > today) {
+                    isValid = false;
+                    errorText = 'Date of birth cannot be in the future';
+                } else if (age > 150) {
+                    isValid = false;
+                    errorText = 'Please enter a valid date of birth';
+                }
+            }
+            else if (fieldId === 'admissionDate' && value) {
+                const admissionDate = new Date(value);
+                const today = new Date();
+                const oneYearFromNow = new Date();
+                oneYearFromNow.setFullYear(today.getFullYear() + 1);
+                
+                if (admissionDate > oneYearFromNow) {
+                    isValid = false;
+                    errorText = 'Admission date cannot be more than a year in the future';
+                }
+            }
+
+            // Update field appearance
+            if (isValid) {
+                field.classList.remove('invalid');
+                field.classList.add('valid');
+                if (errorMsg) {
+                    errorMsg.textContent = errorText;
+                    errorMsg.classList.remove('show');
+                }
+            } else {
+                field.classList.remove('valid');
+                field.classList.add('invalid');
+                if (errorMsg) {
+                    errorMsg.textContent = errorText;
+                    errorMsg.classList.add('show');
+                }
+            }
+
+            return isValid;
+        }
+
+        // Check if form is valid - Require essential fields for ICU dashboard
+        function checkFormValidity() {
+            const requiredForICU = ['fullName', 'patientId', 'bedNumber', 'primaryCondition'];
+            let allValid = true;
+            
+            requiredForICU.forEach(fieldId => {
+                const field = document.getElementById(fieldId);
+                if (field && !field.value.trim()) {
+                    allValid = false;
+                }
+            });
+            
+            submitBtn.disabled = !allValid;
+            return allValid;
+        }
+
+        // Add event listeners to all form fields
+        requiredFields.forEach(fieldId => {
+            const field = document.getElementById(fieldId);
+            if (field) {
+                field.addEventListener('input', () => checkFormValidity());
+                field.addEventListener('blur', () => validateField(fieldId));
+                field.addEventListener('change', () => checkFormValidity());
+            }
+        });
+
+        // Add event listeners for optional fields
+        ['medicalHistory', 'attendingPhysician', 'assignedNurse', 'communicationNotes', 'bloodType'].forEach(fieldId => {
+            const field = document.getElementById(fieldId);
+            if (field) {
+                field.addEventListener('input', () => validateField(fieldId));
+                field.addEventListener('blur', () => validateField(fieldId));
+            }
+        });
+
+        // Handle communication method checkboxes
+        document.querySelectorAll('.checkbox-item').forEach(item => {
+            const checkbox = item.querySelector('.checkbox-input');
+            
+            item.addEventListener('click', (e) => {
+                if (e.target !== checkbox) {
+                    checkbox.checked = !checkbox.checked;
+                }
+                item.classList.toggle('checked', checkbox.checked);
+                checkFormValidity();
+            });
+
+            checkbox.addEventListener('change', () => {
+                item.classList.toggle('checked', checkbox.checked);
+                checkFormValidity();
+            });
+        });
+
+        // Form submission - Collect and send patient data
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            // Collect form data
+            const formData = {
+                fullName: document.getElementById('patientName').value,
+                patientId: document.getElementById('patientId').value,
+                dateOfBirth: document.getElementById('dateOfBirth').value,
+                gender: document.getElementById('gender').value,
+                bloodType: document.getElementById('bloodType').value,
+                primaryCondition: document.getElementById('primaryCondition').value,
+                mobilityLevel: document.getElementById('mobilityLevel').value,
+                medicalHistory: document.getElementById('medicalHistory').value,
+                attendingPhysician: document.getElementById('attendingPhysician').value,
+                admissionDate: document.getElementById('admissionDate').value,
+                roomNumber: document.getElementById('roomNumber').value,
+                bedNumber: document.getElementById('bedNumber').value,
+                department: document.getElementById('department').value,
+                assignedNurse: document.getElementById('assignedNurse').value,
+                careLevel: document.getElementById('careLevel').value,
+                communicationNotes: document.getElementById('communicationNotes').value,
+                communicationMethods: Array.from(document.querySelectorAll('input[name="communication"]:checked')).map(cb => cb.value)
+            };
+            
+            try {
+                // Send data to backend
+                const response = await fetch('/api/register/patient', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                });
+                
+                const result = await response.json();
+                
+                if (result.status === 'success') {
+                    // Show success modal
+                    successModal.classList.add('show');
+                    
+                    // Redirect to caregiver registration
+                    setTimeout(() => {
+                        window.location.href = '/caregiver';
+                    }, 1500);
+                } else {
+                    alert('Registration failed: ' + result.message);
+                }
+            } catch (error) {
+                console.error('Registration error:', error);
+                alert('Registration failed. Please try again.');
+            }
+        });
+
+        // Enable submit button immediately for demo
+        submitBtn.disabled = false;
+    </script>
+</body>
+</html>

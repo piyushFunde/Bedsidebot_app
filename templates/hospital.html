@@ -1,0 +1,924 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hospital Registration - BedsideBot</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-blue: #4F7FFF;
+            --secondary-blue: #667eea;
+            --accent-green: #10b981;
+            --light-blue: #f0f4ff;
+            --soft-white: #fefeff;
+            --text-dark: #1f2937;
+            --text-light: #6b7280;
+            --border-light: #e5e7eb;
+            --success-green: #10b981;
+            --warning-red: #ef4444;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: var(--text-dark);
+        }
+
+        /* Top Navigation Bar */
+        .top-nav {
+            background: var(--soft-white);
+            padding: 1rem 2rem;
+            box-shadow: var(--shadow);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .nav-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo-section {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            background: var(--primary-blue);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.5rem;
+        }
+
+        .logo-text {
+            font-family: 'Poppins', sans-serif;
+            font-size: 1.5rem;
+            font-weight: 700;
+            font-style: italic;
+            color: var(--text-dark);
+        }
+
+        .logo-subtitle {
+            font-size: 0.875rem;
+            color: var(--text-light);
+            font-weight: 400;
+        }
+
+        .security-badge {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--accent-green);
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        /* Progress Steps */
+        .progress-nav {
+            background: var(--soft-white);
+            padding: 1.5rem 2rem;
+            border-bottom: 1px solid var(--border-light);
+        }
+
+        .progress-content {
+            max-width: 800px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+        }
+
+        .step {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .step.active {
+            background: var(--primary-blue);
+            color: white;
+        }
+
+        .step.completed {
+            background: var(--accent-green);
+            color: white;
+        }
+
+        .step.inactive {
+            background: var(--border-light);
+            color: var(--text-light);
+        }
+
+        .step-number {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.875rem;
+            font-weight: 600;
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .step.active .step-number {
+            background: rgba(255, 255, 255, 0.9);
+            color: var(--primary-blue);
+        }
+
+        .step.completed .step-number {
+            background: rgba(255, 255, 255, 0.9);
+            color: var(--accent-green);
+        }
+
+        .step-text {
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        /* Main Container */
+        .main-container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .form-container {
+            background: var(--soft-white);
+            border-radius: 16px;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            overflow: hidden;
+            animation: slideUp 0.6s ease-out;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .form-header {
+            background: linear-gradient(135deg, var(--primary-blue), var(--secondary-blue));
+            color: white;
+            padding: 2rem;
+            text-align: center;
+        }
+
+        .form-title {
+            font-family: 'Poppins', sans-serif;
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .form-subtitle {
+            font-size: 1rem;
+            opacity: 0.9;
+        }
+
+        .form-content {
+            padding: 2rem;
+        }
+
+        /* Section Styling */
+        .form-section {
+            margin-bottom: 2rem;
+            animation: fadeInUp 0.6s ease-out;
+            animation-fill-mode: both;
+        }
+
+        .form-section:nth-child(1) { animation-delay: 0.1s; }
+        .form-section:nth-child(2) { animation-delay: 0.2s; }
+        .form-section:nth-child(3) { animation-delay: 0.3s; }
+        .form-section:nth-child(4) { animation-delay: 0.4s; }
+        .form-section:nth-child(5) { animation-delay: 0.5s; }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 2px solid var(--light-blue);
+        }
+
+        .section-icon {
+            width: 32px;
+            height: 32px;
+            background: var(--light-blue);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+        }
+
+        .section-title {
+            font-family: 'Poppins', sans-serif;
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--text-dark);
+        }
+
+        /* Form Grid */
+        .form-row {
+            display: grid;
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .form-row.single { grid-template-columns: 1fr; }
+        .form-row.double { grid-template-columns: 1fr 1fr; }
+        .form-row.triple { grid-template-columns: 1fr 1fr 1fr; }
+
+        /* Form Groups */
+        .form-group {
+            position: relative;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--text-dark);
+            margin-bottom: 0.5rem;
+        }
+
+        .required {
+            color: var(--warning-red);
+        }
+
+        .form-input, .form-select, .form-textarea {
+            width: 100%;
+            padding: 0.875rem 1rem;
+            border: 2px solid var(--border-light);
+            border-radius: 8px;
+            font-size: 1rem;
+            background: var(--soft-white);
+            transition: all 0.3s ease;
+            font-family: inherit;
+        }
+
+        .form-textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        .form-input:focus, .form-select:focus, .form-textarea:focus {
+            outline: none;
+            border-color: var(--primary-blue);
+            box-shadow: 0 0 0 3px rgba(79, 127, 255, 0.1);
+            transform: translateY(-1px);
+        }
+
+        .form-input.valid, .form-select.valid, .form-textarea.valid {
+            border-color: var(--success-green);
+            background: rgba(16, 185, 129, 0.05);
+        }
+
+        .form-input.invalid, .form-select.invalid, .form-textarea.invalid {
+            border-color: var(--warning-red);
+            background: rgba(239, 68, 68, 0.05);
+            animation: shake 0.4s ease-in-out;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+        .error-message {
+            color: var(--warning-red);
+            font-size: 0.75rem;
+            margin-top: 0.5rem;
+            opacity: 0;
+            transform: translateY(-10px);
+            transition: all 0.3s ease;
+        }
+
+        .error-message.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Checkbox Groups */
+        .checkbox-group {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-top: 0.5rem;
+        }
+
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem;
+            border: 2px solid var(--border-light);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .checkbox-item:hover {
+            border-color: var(--primary-blue);
+            background: var(--light-blue);
+        }
+
+        .checkbox-item.checked {
+            border-color: var(--primary-blue);
+            background: var(--light-blue);
+        }
+
+        .checkbox-input {
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            border: 2px solid var(--border-light);
+            border-radius: 4px;
+            position: relative;
+            cursor: pointer;
+        }
+
+        .checkbox-input:checked {
+            background: var(--primary-blue);
+            border-color: var(--primary-blue);
+        }
+
+        .checkbox-input:checked::after {
+            content: '✓';
+            position: absolute;
+            top: -2px;
+            left: 2px;
+            color: white;
+            font-size: 0.875rem;
+            font-weight: bold;
+        }
+
+        .checkbox-label {
+            font-size: 0.875rem;
+            color: var(--text-dark);
+            cursor: pointer;
+        }
+
+        /* Submit Button */
+        .submit-section {
+            margin-top: 2rem;
+            padding-top: 2rem;
+            border-top: 1px solid var(--border-light);
+            text-align: center;
+        }
+
+        .submit-btn {
+            background: linear-gradient(135deg, var(--primary-blue), var(--secondary-blue));
+            color: white;
+            border: none;
+            padding: 1rem 3rem;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: var(--shadow);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .submit-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            transition: left 0.5s;
+        }
+
+        .submit-btn:hover::before {
+            left: 100%;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px -5px rgba(79, 127, 255, 0.4);
+        }
+
+        .submit-btn:disabled {
+            background: var(--text-light);
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .submit-btn:disabled::before {
+            display: none;
+        }
+
+        /* Success Modal */
+        .success-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.3s ease;
+        }
+
+        .success-modal.show {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .success-content {
+            background: white;
+            border-radius: 16px;
+            padding: 2rem;
+            text-align: center;
+            max-width: 400px;
+            width: 90%;
+            transform: scale(0.8);
+            transition: all 0.3s ease;
+        }
+
+        .success-modal.show .success-content {
+            transform: scale(1);
+        }
+
+        .success-icon {
+            width: 80px;
+            height: 80px;
+            background: var(--success-green);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1rem;
+            color: white;
+            font-size: 2rem;
+        }
+
+        .success-title {
+            font-family: 'Poppins', sans-serif;
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: var(--text-dark);
+        }
+
+        .success-subtitle {
+            color: var(--text-light);
+            margin-bottom: 1.5rem;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .nav-content {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .progress-content {
+                flex-wrap: wrap;
+                gap: 1rem;
+            }
+
+            .main-container {
+                padding: 1rem;
+            }
+
+            .form-content {
+                padding: 1.5rem;
+            }
+
+            .form-row.double,
+            .form-row.triple {
+                grid-template-columns: 1fr;
+            }
+
+            .checkbox-group {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .form-title {
+                font-size: 1.5rem;
+            }
+
+            .submit-btn {
+                padding: 0.875rem 2rem;
+                font-size: 0.875rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Top Navigation -->
+    <nav class="top-nav">
+        <div class="nav-content">
+            <div class="logo-section">
+                <div class="logo-icon">🏥</div>
+                <div>
+                    <div class="logo-text">BedsideBot</div>
+                    <div class="logo-subtitle">Multi-Assistant Healthcare System</div>
+                </div>
+            </div>
+            <div class="security-badge">
+                <span>🔒</span>
+                <span>Secure Registration</span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Progress Steps -->
+    <div class="progress-nav">
+        <div class="progress-content">
+            <div class="step active" id="step1">
+                <div class="step-number">1</div>
+                <div class="step-text">Hospital</div>
+            </div>
+            <div class="step inactive" id="step2">
+                <div class="step-number">2</div>
+                <div class="step-text">Staff</div>
+            </div>
+            <div class="step inactive" id="step3">
+                <div class="step-number">3</div>
+                <div class="step-text">Patient</div>
+            </div>
+            <div class="step inactive" id="step4">
+                <div class="step-number">4</div>
+                <div class="step-text">Caregiver</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Container -->
+    <div class="main-container">
+        <div class="form-container">
+            <div class="form-header">
+                <h1 class="form-title">Hospital Registration</h1>
+                <p class="form-subtitle">Register your hospital to start using BedsideBot system</p>
+            </div>
+
+            <div class="form-content">
+                <form id="hospitalForm" novalidate>
+                    <!-- Basic Information -->
+                    <div class="form-section">
+                        <div class="section-header">
+                            <div class="section-icon">🏥</div>
+                            <h2 class="section-title">Basic Information</h2>
+                        </div>
+                        <div class="form-row double">
+                            <div class="form-group">
+                                <label class="form-label">Hospital Name <span class="required">*</span></label>
+                                <input type="text" class="form-input" id="hospitalName" placeholder="Enter hospital name" required>
+                                <div class="error-message">Hospital name is required</div>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Hospital ID <span class="required">*</span></label>
+                                <input type="text" class="form-input" id="hospitalId" placeholder="Enter unique hospital ID" required>
+                                <div class="error-message">Hospital ID is required</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Address Information -->
+                    <div class="form-section">
+                        <div class="section-header">
+                            <div class="section-icon">📍</div>
+                            <h2 class="section-title">Address Information</h2>
+                        </div>
+                        <div class="form-row single">
+                            <div class="form-group">
+                                <label class="form-label">Full Address <span class="required">*</span></label>
+                                <textarea class="form-textarea" id="fullAddress" placeholder="Enter complete address" required></textarea>
+                                <div class="error-message">Full address is required</div>
+                            </div>
+                        </div>
+                        <div class="form-row triple">
+                            <div class="form-group">
+                                <label class="form-label">City <span class="required">*</span></label>
+                                <input type="text" class="form-input" id="city" placeholder="City" required>
+                                <div class="error-message">City is required</div>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">State <span class="required">*</span></label>
+                                <input type="text" class="form-input" id="state" placeholder="State" required>
+                                <div class="error-message">State is required</div>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">ZIP Code <span class="required">*</span></label>
+                                <input type="text" class="form-input" id="zipCode" placeholder="ZIP Code" required>
+                                <div class="error-message">ZIP Code is required</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Contact Information -->
+                    <div class="form-section">
+                        <div class="section-header">
+                            <div class="section-icon">📞</div>
+                            <h2 class="section-title">Contact Information</h2>
+                        </div>
+                        <div class="form-row double">
+                            <div class="form-group">
+                                <label class="form-label">Primary Contact Number <span class="required">*</span></label>
+                                <input type="tel" class="form-input" id="primaryPhone" placeholder="+1 (555) 123-4567" required>
+                                <div class="error-message">Valid phone number is required</div>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Email Address <span class="required">*</span></label>
+                                <input type="email" class="form-input" id="email" placeholder="hospital@example.com" required>
+                                <div class="error-message">Valid email address is required</div>
+                            </div>
+                        </div>
+                        <div class="form-row single">
+                            <div class="form-group">
+                                <label class="form-label">Emergency Contact</label>
+                                <input type="tel" class="form-input" id="emergencyPhone" placeholder="Emergency contact number">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Administrator Information -->
+                    <div class="form-section">
+                        <div class="section-header">
+                            <div class="section-icon">👤</div>
+                            <h2 class="section-title">Administrator Information</h2>
+                        </div>
+                        <div class="form-row double">
+                            <div class="form-group">
+                                <label class="form-label">Administrator Name <span class="required">*</span></label>
+                                <input type="text" class="form-input" id="adminName" placeholder="Administrator full name" required>
+                                <div class="error-message">Administrator name is required</div>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Administrator Contact</label>
+                                <input type="tel" class="form-input" id="adminPhone" placeholder="Administrator contact number">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- License & Capacity -->
+                    <div class="form-section">
+                        <div class="section-header">
+                            <div class="section-icon">📋</div>
+                            <h2 class="section-title">License & Capacity</h2>
+                        </div>
+                        <div class="form-row triple">
+                            <div class="form-group">
+                                <label class="form-label">License Number <span class="required">*</span></label>
+                                <input type="text" class="form-input" id="licenseNumber" placeholder="Hospital license number" required>
+                                <div class="error-message">License number is required</div>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Total Beds <span class="required">*</span></label>
+                                <input type="number" class="form-input" id="totalBeds" placeholder="Total number of beds" min="1" required>
+                                <div class="error-message">Total beds is required</div>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">ICU Beds <span class="required">*</span></label>
+                                <input type="number" class="form-input" id="icuBeds" placeholder="ICU beds available" min="0" required>
+                                <div class="error-message">ICU beds count is required</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Medical Specialties -->
+                    <div class="form-section">
+                        <div class="section-header">
+                            <div class="section-icon">🏥</div>
+                            <h2 class="section-title">Medical Specialties</h2>
+                        </div>
+                        <div class="checkbox-group">
+                            <div class="checkbox-item" data-specialty="cardiology">
+                                <input type="checkbox" class="checkbox-input" id="cardiology" name="specialties" value="cardiology">
+                                <label class="checkbox-label" for="cardiology">Cardiology</label>
+                            </div>
+                            <div class="checkbox-item" data-specialty="neurology">
+                                <input type="checkbox" class="checkbox-input" id="neurology" name="specialties" value="neurology">
+                                <label class="checkbox-label" for="neurology">Neurology</label>
+                            </div>
+                            <div class="checkbox-item" data-specialty="orthopedics">
+                                <input type="checkbox" class="checkbox-input" id="orthopedics" name="specialties" value="orthopedics">
+                                <label class="checkbox-label" for="orthopedics">Orthopedics</label>
+                            </div>
+                            <div class="checkbox-item" data-specialty="emergency">
+                                <input type="checkbox" class="checkbox-input" id="emergency" name="specialties" value="emergency">
+                                <label class="checkbox-label" for="emergency">Emergency Medicine</label>
+                            </div>
+                            <div class="checkbox-item" data-specialty="internal">
+                                <input type="checkbox" class="checkbox-input" id="internal" name="specialties" value="internal">
+                                <label class="checkbox-label" for="internal">Internal Medicine</label>
+                            </div>
+                            <div class="checkbox-item" data-specialty="surgery">
+                                <input type="checkbox" class="checkbox-input" id="surgery" name="specialties" value="surgery">
+                                <label class="checkbox-label" for="surgery">Surgery</label>
+                            </div>
+                            <div class="checkbox-item" data-specialty="pediatrics">
+                                <input type="checkbox" class="checkbox-input" id="pediatrics" name="specialties" value="pediatrics">
+                                <label class="checkbox-label" for="pediatrics">Pediatrics</label>
+                            </div>
+                            <div class="checkbox-item" data-specialty="geriatrics">
+                                <input type="checkbox" class="checkbox-input" id="geriatrics" name="specialties" value="geriatrics">
+                                <label class="checkbox-label" for="geriatrics">Geriatrics</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Submit Section -->
+                    <div class="submit-section">
+                        <button type="submit" class="submit-btn" id="submitBtn" disabled>
+                            Continue to Staff Registration →
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Success Modal -->
+    <div class="success-modal" id="successModal">
+        <div class="success-content">
+            <div class="success-icon">✅</div>
+            <h2 class="success-title">Registration Successful!</h2>
+            <p class="success-subtitle">Redirecting to staff registration...</p>
+        </div>
+    </div>
+
+    <script>
+        // Form validation and submission logic
+        const form = document.getElementById('hospitalForm');
+        const submitBtn = document.getElementById('submitBtn');
+        const successModal = document.getElementById('successModal');
+
+        // Required fields for validation
+        const requiredFields = [
+            'hospitalName', 'hospitalId', 'fullAddress', 'city', 'state', 
+            'zipCode', 'primaryPhone', 'email', 'adminName', 'licenseNumber', 
+            'totalBeds', 'icuBeds'
+        ];
+
+        // Validation patterns
+        const validationPatterns = {
+            email: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+            phone: /^[\+]?[1-9][\d]{0,15}$/,
+            zipCode: /^\d{5}(-\d{4})?$/
+        };
+
+        // Validate individual field
+        function validateField(fieldId) {
+            const field = document.getElementById(fieldId);
+            const errorMsg = field.parentNode.querySelector('.error-message');
+            const value = field.value.trim();
+            
+            let isValid = true;
+            let errorText = '';
+
+            // Check if required field is empty
+            if (requiredFields.includes(fieldId) && !value) {
+                isValid = false;
+                errorText = 'This field is required';
+            }
+            
+            // Specific validations
+            else if (fieldId === 'email' && value && !validationPatterns.email.test(value)) {
+                isValid = false;
+                errorText = 'Please enter a valid email address';
+            }
+            else if ((fieldId === 'primaryPhone' || fieldId === 'emergencyPhone' || fieldId === 'adminPhone') && value && !validationPatterns.phone.test(value.replace(/[\s\-\(\)]/g, ''))) {
+                isValid = false;
+                errorText = 'Please enter a valid phone number';
+            }
+            else if (fieldId === 'zipCode' && value && !validationPatterns.zipCode.test(value)) {
+                isValid = false;
+                errorText = 'Please enter a valid ZIP code';
+            }
+            else if ((fieldId === 'totalBeds' || fieldId === 'icuBeds') && value && (parseInt(value) < 0 || isNaN(parseInt(value)))) {
+                isValid = false;
+                errorText = 'Please enter a valid number';
+            }
+
+            // Update field appearance
+            if (isValid) {
+                field.classList.remove('invalid');
+                field.classList.add('valid');
+                errorMsg.textContent = errorText;
+                errorMsg.classList.remove('show');
+            } else {
+                field.classList.remove('valid');
+                field.classList.add('invalid');
+                errorMsg.textContent = errorText;
+                errorMsg.classList.add('show');
+            }
+
+            return isValid;
+        }
+
+        // Check if form is valid - Always return true for quick demo
+        function checkFormValidity() {
+            // Enable submit button always for demo
+            submitBtn.disabled = false;
+            return true;
+        }
+
+        // Add event listeners to all form fields
+        requiredFields.forEach(fieldId => {
+            const field = document.getElementById(fieldId);
+            if (field) {
+                field.addEventListener('input', () => checkFormValidity());
+                field.addEventListener('blur', () => validateField(fieldId));
+                field.addEventListener('change', () => checkFormValidity());
+            }
+        });
+
+        // Add event listeners for optional fields
+        ['emergencyPhone', 'adminPhone'].forEach(fieldId => {
+            const field = document.getElementById(fieldId);
+            if (field) {
+                field.addEventListener('input', () => validateField(fieldId));
+                field.addEventListener('blur', () => validateField(fieldId));
+            }
+        });
+
+        // Handle checkbox interactions
+        document.querySelectorAll('.checkbox-item').forEach(item => {
+            const checkbox = item.querySelector('.checkbox-input');
+            
+            item.addEventListener('click', (e) => {
+                if (e.target !== checkbox) {
+                    checkbox.checked = !checkbox.checked;
+                }
+                item.classList.toggle('checked', checkbox.checked);
+            });
+
+            checkbox.addEventListener('change', () => {
+                item.classList.toggle('checked', checkbox.checked);
+            });
+        });
+
+        // Form submission - Skip validation for demo
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            // Show success modal immediately
+            successModal.classList.add('show');
+            
+            // Redirect to staff registration quickly
+            setTimeout(() => {
+                window.location.href = '/staff';
+            }, 1000);
+        });
+
+        // Enable submit button immediately for demo
+        submitBtn.disabled = false;
+    </script>
+</body>
+</html>
