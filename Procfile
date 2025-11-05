@@ -1,1 +1,1 @@
-web: python app_cloud.py
+web: python app_minimal.py
