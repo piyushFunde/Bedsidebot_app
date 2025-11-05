@@ -5,8 +5,11 @@ from flask_limiter.util import get_remote_address
 import time
 import json
 import os
+from datetime import datetime, date
 from dotenv import load_dotenv
 from security import security, require_auth, validate_patient_data, sanitize_patient_data, log_security_event
+from database import db, init_database, Hospital, Staff, Patient, PatientRequest, MonitoringSession, Caregiver, SystemAnalytics, get_patient_request_patterns
+from analytics_routes import analytics_bp
 
 # Load environment variables
 load_dotenv()
@@ -14,6 +17,8 @@ load_dotenv()
 # Initialize Flask app with security
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev-key-change-in-production')
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///bedsidebot.db')
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 CORS(app, origins=['https://*.railway.app', 'https://localhost:*'])
 
 # Initialize rate limiter
@@ -22,6 +27,12 @@ limiter = Limiter(
     key_func=get_remote_address,
     default_limits=["100 per hour"]
 )
+
+# Initialize database
+init_database(app)
+
+# Register analytics blueprint
+app.register_blueprint(analytics_bp)
 
 # Registration data storage
 registration_data = {
@@ -147,8 +158,46 @@ def register_patient():
         'lastActivity': 'Just registered'
     }
     
-    registration_data['patients'].append(patient_data)
-    return jsonify({"status": "success", "message": "Patient registered successfully", "patient_id": patient_data['id']})
+    # Save to database
+    try:
+        new_patient = Patient(
+            patient_id=sanitized_data.get('patientId'),
+            full_name=sanitized_data.get('fullName'),
+            date_of_birth=datetime.strptime(sanitized_data.get('dateOfBirth'), '%Y-%m-%d').date() if sanitized_data.get('dateOfBirth') else None,
+            gender=sanitized_data.get('gender'),
+            blood_type=sanitized_data.get('bloodType'),
+            primary_condition=sanitized_data.get('primaryCondition'),
+            mobility_level=sanitized_data.get('mobilityLevel'),
+            medical_history=sanitized_data.get('medicalHistory'),
+            attending_physician=sanitized_data.get('attendingPhysician'),
+            room_number=sanitized_data.get('roomNumber'),
+            bed_number=sanitized_data.get('bedNumber'),
+            department=sanitized_data.get('department'),
+            care_level=sanitized_data.get('careLevel'),
+            assigned_nurse_id=sanitized_data.get('assignedNurse'),
+            communication_methods=json.dumps(sanitized_data.get('communicationMethods', [])),
+            communication_notes=sanitized_data.get('communicationNotes'),
+            admission_date=datetime.strptime(sanitized_data.get('admissionDate'), '%Y-%m-%d').date() if sanitized_data.get('admissionDate') else date.today()
+        )
+        
+        db.session.add(new_patient)
+        db.session.commit()
+        
+        # Also keep in memory for backward compatibility
+        registration_data['patients'].append(patient_data)
+        
+        log_security_event('PATIENT_REGISTERED', f'Patient {new_patient.full_name} registered successfully')
+        
+        return jsonify({
+            "status": "success", 
+            "message": "Patient registered successfully", 
+            "patient_id": new_patient.patient_id
+        })
+        
+    except Exception as e:
+        db.session.rollback()
+        log_security_event('PATIENT_REGISTRATION_ERROR', f'Database error: {str(e)}')
+        return jsonify({"status": "error", "message": "Registration failed. Please try again."}), 500
 
 @app.route('/api/register/caregiver', methods=['POST'])
 def register_caregiver():
@@ -158,13 +207,20 @@ def register_caregiver():
 
 @app.route('/api/get_patients', methods=['GET'])
 def get_patients():
-    enhanced_patients = []
-    for i, patient in enumerate(registration_data['patients']):
-        enhanced_patient = patient.copy()
-        enhanced_patient['id'] = enhanced_patient.get('id', f'P{i+1:03d}')
-        enhanced_patient['lastActivity'] = enhanced_patient.get('lastActivity', 'No recent activity')
-        enhanced_patients.append(enhanced_patient)
-    return jsonify({"status": "success", "patients": enhanced_patients})
+    try:
+        patients = Patient.query.filter_by(is_active=True).all()
+        patient_list = []
+        
+        for patient in patients:
+            patient_dict = patient.to_dict()
+            # Add last activity from recent requests
+            recent_request = PatientRequest.query.filter_by(patient_id=patient.patient_id).order_by(PatientRequest.timestamp.desc()).first()
+            patient_dict['lastActivity'] = recent_request.timestamp.strftime('%Y-%m-%d %H:%M') if recent_request else 'No recent activity'
+            patient_list.append(patient_dict)
+        
+        return jsonify({"status": "success", "patients": patient_list})
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
 
 @app.route('/api/get_latest_request', methods=['GET'])
 def get_latest_request():
@@ -226,6 +282,25 @@ def set_button():
         button_names = ["Call Nurse", "Water", "Food", "Bathroom", "Emergency"]
         action_name = button_names[button - 1]
         
+        # Save request to database
+        try:
+            new_request = PatientRequest(
+                patient_id=patient_info.get("id", "UNKNOWN"),
+                request_type=button,
+                request_method='gesture',
+                request_message=f"Hand Gesture: {action_name}",
+                room_number=patient_info.get("room_number", "N/A"),
+                bed_number=patient_info.get("bed_number", "N/A"),
+                urgency_level='critical' if button == 5 else 'normal'
+            )
+            
+            db.session.add(new_request)
+            db.session.commit()
+            
+        except Exception as e:
+            print(f"[ERROR] Failed to save request: {e}")
+        
+        # Update latest request for real-time dashboard
         latest_request = {
             "patientName": patient_info.get("name", "Unknown Patient"),
             "patientId": patient_info.get("id", "N/A"),
