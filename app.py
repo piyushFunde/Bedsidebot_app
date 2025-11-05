@@ -113,11 +113,20 @@ def register_staff():
 @app.route('/api/register/patient', methods=['POST'])
 def register_patient():
     data = request.json
-    if 'id' not in data:
-        data['id'] = f"P{len(registration_data['patients']) + 1:03d}"
-    data['lastActivity'] = 'Just registered'
-    registration_data['patients'].append(data)
-    return jsonify({"status": "success", "message": "Patient registered successfully", "patient_id": data['id']})
+    patient_data = {
+        'id': data.get('patientId', f"P{len(registration_data['patients']) + 1:03d}"),
+        'patientId': data.get('patientId'),
+        'name': data.get('fullName'),
+        'fullName': data.get('fullName'),
+        'bed_number': data.get('bedNumber'),
+        'bedNumber': data.get('bedNumber'),
+        'roomNumber': data.get('roomNumber'),
+        'primaryCondition': data.get('primaryCondition'),
+        'lastActivity': 'Just registered'
+    }
+    
+    registration_data['patients'].append(patient_data)
+    return jsonify({"status": "success", "message": "Patient registered successfully", "patient_id": patient_data['id']})
 
 @app.route('/api/register/caregiver', methods=['POST'])
 def register_caregiver():
