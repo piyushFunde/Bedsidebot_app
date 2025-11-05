@@ -284,7 +284,8 @@
                 <div class="patient-avatar">👤</div>
                 <div class="patient-details">
                     <h2 id="patientName">Loading...</h2>
-                    <p id="bedNumber">Bed: --</p>
+                    <p id="patientDetails">ID: -- | Bed: -- | Room: --</p>
+                    <p id="patientCondition">Condition: --</p>
                 </div>
             </div>
             
@@ -478,8 +479,9 @@
                 .then(data => {
                     if (data.patients && data.patients.length > 0) {
                         const patient = data.patients[0];
-                        document.getElementById('patientName').textContent = patient.name;
-                        document.getElementById('bedNumber').textContent = `Bed: ${patient.bed_number}`;
+                        document.getElementById('patientName').textContent = patient.fullName || patient.name;
+                        document.getElementById('patientDetails').textContent = `ID: ${patient.patientId || patient.id} | Bed: ${patient.bedNumber || patient.bed_number} | Room: ${patient.roomNumber || 'N/A'}`;
+                        document.getElementById('patientCondition').textContent = `Condition: ${patient.primaryCondition || 'N/A'}`;
                         startPatientMonitoring(patient.name, patient.bed_number);
                     } else {
                         document.getElementById('patientName').textContent = 'No Patient Registered';

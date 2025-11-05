@@ -156,10 +156,25 @@ def remove_patient():
 def start_monitoring():
     global active_features, patient_info
     data = request.json
-    patient_info = {
-        "name": data.get("patientName", ""),
-        "bed_number": data.get("bedNumber", "")
-    }
+    # Get patient from registered patients
+    patients = registration_data.get('patients', [])
+    if patients:
+        patient = patients[0]
+        patient_info = {
+            "name": patient.get("fullName", data.get("patientName", "")),
+            "id": patient.get("patientId", "N/A"),
+            "bed_number": patient.get("bedNumber", data.get("bedNumber", "")),
+            "room_number": patient.get("roomNumber", "N/A"),
+            "primary_condition": patient.get("primaryCondition", "N/A")
+        }
+    else:
+        patient_info = {
+            "name": data.get("patientName", ""),
+            "id": "N/A",
+            "bed_number": data.get("bedNumber", ""),
+            "room_number": "N/A",
+            "primary_condition": "N/A"
+        }
     active_features = set(data.get("features", []))
     return jsonify({"status": "success", "message": "Monitoring started (cloud mode)"})
 
@@ -182,10 +197,14 @@ def set_button():
         
         latest_request = {
             "patientName": patient_info.get("name", "Unknown Patient"),
+            "patientId": patient_info.get("id", "N/A"),
             "bedNumber": patient_info.get("bed_number", "N/A"),
+            "roomNumber": patient_info.get("room_number", "N/A"),
+            "primaryCondition": patient_info.get("primary_condition", "N/A"),
             "requestType": button,
             "timestamp": time.time(),
-            "message": f"Hand Gesture: {action_name}"
+            "message": f"Hand Gesture: {action_name}",
+            "type": "gesture"
         }
         
         print(f"[NOTIFICATION] {patient_info.get('name', 'Patient')} - {action_name} (Gesture)")
