@@ -142,8 +142,14 @@
         /* Advanced Recognition Systems */
         .features-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            grid-template-columns: repeat(2, 1fr);
             gap: 2rem;
+        }
+
+        @media (max-width: 768px) {
+            .features-grid {
+                grid-template-columns: 1fr;
+            }
         }
 
         .feature-card {
@@ -439,7 +445,7 @@
             <p class="subtitle1">Multi-Assistant Model for Bedridden and Physically Disabled Patients</p>
             <p class="subtitle2">Advanced recognition systems including hand sign, eye gaze, voice, and facial recognition to provide 24/7 patient monitoring and seamless communication with caregivers</p>
             <div class="button-group">
-                <a href="#demo" class="btn btn-outline">
+                <a href="/demo" class="btn btn-outline">
                     ▶️ Watch Demo
                 </a>
             </div>
@@ -643,11 +649,7 @@
             observer.observe(el);
         });
 
-        // Button click handlers
-        document.querySelector('.btn-outline').addEventListener('click', (e) => {
-            e.preventDefault();
-            alert('Demo video would play here. This is a demo.');
-        });
+        // Remove the alert handler since we now have a real demo page
 
         // Add hover effects to step icons
         document.querySelectorAll('.step-icon').forEach(icon => {

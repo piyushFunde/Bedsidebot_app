@@ -1,0 +1,8 @@
+{
+  "name": "bedsidebot-frontend",
+  "version": "1.0.0",
+  "description": "BedsideBot Frontend for Vercel",
+  "scripts": {
+    "build": "echo 'Static build complete'"
+  }
+}

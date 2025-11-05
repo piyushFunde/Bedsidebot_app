@@ -550,6 +550,7 @@
                                 Monitoring
                             </div>
                         </div>
+                        <button class="btn btn-secondary" onclick="removePatient('${patient.id}')" style="padding: 0.5rem 1rem; font-size: 0.8rem;">Remove</button>
                     </div>
                     <div class="last-activity">Last activity: ${patient.lastActivity || 'No recent activity'}</div>
                 </div>
@@ -663,6 +664,27 @@
         function clearLog() {
             activityLog = [];
             renderLog();
+        }
+
+        function removePatient(patientId) {
+            if (confirm('Are you sure you want to remove this patient from monitoring?')) {
+                fetch('/api/remove_patient', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ patient_id: patientId })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        loadPatients(); // Reload patient list
+                    }
+                })
+                .catch(error => {
+                    console.error('Error removing patient:', error);
+                });
+            }
         }
 
         function playNotificationSound() {

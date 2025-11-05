@@ -1,6 +1,6 @@
 import cv2
 import mediapipe as mp
-from flask import Flask, render_template, Response, request, jsonify, redirect, url_for
+from flask import Flask, render_template, Response, request, jsonify, redirect, url_for, send_from_directory
 from flask_cors import CORS
 import threading
 from collections import deque
@@ -96,6 +96,9 @@ registration_data = {
     'caregivers': []
 }
 
+# Latest request storage
+latest_request = None
+
 # === EMAIL Notification Function ===
 def send_email_notification(subject, body):
     sender_email = os.getenv("EMAIL_SENDER")
@@ -159,12 +162,33 @@ def send_sms_notification(message_body):
 
 # === Trigger Notifications if Needed ===
 def notify_caregiver(action_text, patient_name="", bed_number=""):
+    global latest_request
+    
     subject = f"Patient Request: {action_text}"
 
     if patient_name and bed_number:
         body = f"Patient {patient_name} (Bed #{bed_number}) has requested: {action_text}. Please respond immediately."
     else:
         body = f"A patient has requested: {action_text}. Please respond immediately."
+
+    # Store latest request for dashboard
+    request_type = None
+    for key, value in action_mapping.items():
+        if value == action_text:
+            request_type = int(key)
+            break
+    
+    if not request_type:
+        # Map button names to numbers
+        button_map = {"CALL NURSE": 1, "WATER": 2, "FOOD": 3, "BATHROOM": 4, "EMERGENCY": 5}
+        request_type = button_map.get(action_text, 1)
+    
+    latest_request = {
+        "patientName": patient_name or "Unknown Patient",
+        "bedNumber": bed_number or "N/A",
+        "requestType": request_type,
+        "timestamp": time.time()
+    }
 
     send_email_notification(subject, body)
     send_sms_notification(body)
@@ -249,8 +273,12 @@ def process_frame():
     if cap is None or not cap.isOpened():
         return None
 
-    ret, frame = cap.read()
-    if not ret:
+    try:
+        ret, frame = cap.read()
+        if not ret:
+            return None
+    except Exception as e:
+        print(f"[ERROR] Frame capture failed: {e}")
         return None
 
     # Flip the frame for better user experience
@@ -347,24 +375,44 @@ def process_frame():
 
     return frame
 
-# Generate frames for video streaming
 def generate_frames():
+    """Generate video frames for streaming"""
     while True:
-        frame = process_frame()
-        if frame is None:
-            continue
+        try:
+            frame = process_frame()
+            if frame is None:
+                frame = create_blank_frame()
+            
+            # Resize frame for better performance
+            frame = cv2.resize(frame, (640, 480))
+            
+            # Encode frame as JPEG
+            ret, buffer = cv2.imencode('.jpg', frame, [cv2.IMWRITE_JPEG_QUALITY, 80])
+            
+            if ret:
+                frame_bytes = buffer.tobytes()
+                yield (b'--frame\r\n'
+                       b'Content-Type: image/jpeg\r\n\r\n' + frame_bytes + b'\r\n')
+            
+            # Small delay to prevent overwhelming the system
+            time.sleep(0.033)  # ~30 FPS
+            
+        except Exception as e:
+            print(f"[ERROR] Frame generation error: {e}")
+            # Create error frame
+            error_frame = create_blank_frame()
+            cv2.putText(error_frame, 'Stream Error', (200, 280), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
+            _, error_buffer = cv2.imencode('.jpg', error_frame)
+            yield (b'--frame\r\n'
+                   b'Content-Type: image/jpeg\r\n\r\n' + error_buffer.tobytes() + b'\r\n')
+            time.sleep(0.1)
 
-        # Encode the frame as JPEG
-        ret, buffer = cv2.imencode('.jpg', frame)
-        if not ret:
-            continue
-
-        # Yield the frame in byte format
-        yield (b'--frame\r\n'
-               b'Content-Type: image/jpeg\r\n\r\n' + buffer.tobytes() + b'\r\n')
-
-        # Control frame rate
-        time.sleep(0.1)
+def create_blank_frame():
+    """Create a blank frame when camera is not available"""
+    frame = cv2.zeros((480, 640, 3), dtype=cv2.uint8)
+    cv2.putText(frame, 'BedsideBot Camera', (200, 200), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2)
+    cv2.putText(frame, 'Initializing...', (220, 250), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (200, 200, 200), 2)
+    return frame
 
 # Voice recognition function
 def voice_recognition():
@@ -430,6 +478,22 @@ def patient_interface():
 def test_video():
     return render_template('test_video.html')
 
+@app.route('/demo')
+def demo():
+    return render_template('demo.html')
+
+@app.route('/icu_access')
+def icu_access():
+    return render_template('icu_access.html')
+
+@app.route('/icu_dashboard')
+def icu_dashboard():
+    return render_template('icu_dashboard.html')
+
+@app.route('/static/<filename>')
+def static_files(filename):
+    return send_from_directory('static', filename)
+
 # API Routes for registration
 @app.route('/api/register/hospital', methods=['POST'])
 def register_hospital():
@@ -446,8 +510,12 @@ def register_staff():
 @app.route('/api/register/patient', methods=['POST'])
 def register_patient():
     data = request.json
+    # Add unique ID if not provided
+    if 'id' not in data:
+        data['id'] = f"P{len(registration_data['patients']) + 1:03d}"
+    data['lastActivity'] = 'Just registered'
     registration_data['patients'].append(data)
-    return jsonify({"status": "success", "message": "Patient registered successfully"})
+    return jsonify({"status": "success", "message": "Patient registered successfully", "patient_id": data['id']})
 
 @app.route('/api/register/caregiver', methods=['POST'])
 def register_caregiver():
@@ -457,18 +525,40 @@ def register_caregiver():
 
 @app.route('/api/get_patients', methods=['GET'])
 def get_patients():
-    return jsonify({"status": "success", "patients": registration_data['patients']})
+    # Add missing fields to patients for dashboard display
+    enhanced_patients = []
+    for i, patient in enumerate(registration_data['patients']):
+        enhanced_patient = patient.copy()
+        enhanced_patient['id'] = enhanced_patient.get('id', f'P{i+1:03d}')
+        enhanced_patient['lastActivity'] = enhanced_patient.get('lastActivity', 'No recent activity')
+        enhanced_patients.append(enhanced_patient)
+    return jsonify({"status": "success", "patients": enhanced_patients})
+
+@app.route('/api/get_latest_request', methods=['GET'])
+def get_latest_request():
+    global latest_request
+    if latest_request:
+        request_data = latest_request
+        latest_request = None  # Clear after sending
+        return jsonify({"request": request_data})
+    return jsonify({"request": None})
+
+@app.route('/api/remove_patient', methods=['POST'])
+def remove_patient():
+    data = request.json
+    patient_id = data.get('patient_id')
+    
+    # Remove patient from registration data
+    registration_data['patients'] = [p for p in registration_data['patients'] if p.get('id') != patient_id]
+    
+    return jsonify({"status": "success", "message": "Patient removed from monitoring"})
 
 # Existing monitoring routes
 @app.route('/video_feed')
 def video_feed():
-    print("[INFO] Video feed requested")
-    try:
-        return Response(generate_frames(),
-                        mimetype='multipart/x-mixed-replace; boundary=frame')
-    except Exception as e:
-        print(f"[ERROR] Video feed error: {e}")
-        return str(e), 500
+    """Video streaming route with proper multipart response"""
+    return Response(generate_frames(),
+                    mimetype='multipart/x-mixed-replace; boundary=frame')
 
 @app.route('/start_monitoring', methods=['POST'])
 def start_monitoring():
@@ -483,8 +573,21 @@ def start_monitoring():
 
     # Initialize camera if needed
     if cap is None:
-        cap = cv2.VideoCapture(0)
-        print("[INFO] Camera initialized")
+        try:
+            cap = cv2.VideoCapture(0)
+            if cap.isOpened():
+                # Set camera properties for better performance
+                cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
+                cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
+                cap.set(cv2.CAP_PROP_FPS, 30)
+                cap.set(cv2.CAP_PROP_BUFFERSIZE, 1)  # Reduce buffer to prevent lag
+                print("[INFO] Camera initialized successfully")
+            else:
+                print("[WARNING] Camera could not be opened")
+                cap = None
+        except Exception as e:
+            print(f"[ERROR] Camera initialization failed: {e}")
+            cap = None
 
     # Return success message
     return jsonify({"status": "success", "message": "Monitoring started"})
@@ -563,8 +666,13 @@ def listen_voice():
 def stop_monitoring():
     global cap, active_features, detected_button, previous_button
 
-    if cap is not None:
-        cap.release()
+    try:
+        if cap is not None:
+            cap.release()
+            cap = None
+            print("[INFO] Camera released successfully")
+    except Exception as e:
+        print(f"[WARNING] Error releasing camera: {e}")
         cap = None
 
     active_features.clear()
@@ -576,12 +684,22 @@ def stop_monitoring():
 # Clean up resources when the app is shutting down
 def cleanup():
     global cap
-    if cap is not None:
-        cap.release()
-    cv2.destroyAllWindows()
+    try:
+        if cap is not None:
+            cap.release()
+            cap = None
+        cv2.destroyAllWindows()
+        print("[INFO] Cleanup completed")
+    except Exception as e:
+        print(f"[WARNING] Cleanup error: {e}")
 
 if __name__ == "__main__":
     try:
-        app.run(debug=True, host='0.0.0.0', port=5000)
+        print("[INFO] Starting BedsideBot server...")
+        print("[INFO] Server will be available at: http://localhost:5000")
+        print("[INFO] Press Ctrl+C to stop the server")
+        app.run(debug=False, host='0.0.0.0', port=5000, threaded=True)
+    except KeyboardInterrupt:
+        print("\n[INFO] Server stopped by user")
     finally:
         cleanup()

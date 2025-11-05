@@ -404,7 +404,7 @@
             
             <div class="top-bar-controls">
                 <button class="exit-button" onclick="toggleFullscreen()" style="position: static; background: rgba(52, 152, 219, 0.9);">Toggle Fullscreen</button>
-                <button class="exit-button" onclick="exitFullscreen()" style="position: static;">Exit Monitoring</button>
+                <button class="exit-button" onclick="leavePatientMonitoring()" style="position: static;">Leave Patient Monitoring</button>
             </div>
             
             <div class="system-status">
@@ -552,9 +552,13 @@
             isFullscreen = true;
         }
 
-        function exitFullscreen() {
-            if (confirm('Are you sure you want to stop monitoring?')) {
+        function leavePatientMonitoring() {
+            const patientName = document.getElementById('patientName').textContent;
+            if (confirm(`Are you sure you want to stop monitoring and remove ${patientName} from the system?`)) {
+                // Stop monitoring first
                 stopMonitoring();
+                
+                // Exit fullscreen if active
                 if (document.fullscreenElement) {
                     if (document.exitFullscreen) {
                         document.exitFullscreen().catch(err => console.log('Exit fullscreen failed:', err));
@@ -564,9 +568,26 @@
                         document.msExitFullscreen();
                     }
                 }
-                setTimeout(() => {
-                    window.location.href = '/modules';
-                }, 100);
+                
+                // Remove patient from system
+                fetch('/api/get_patients')
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.patients && data.patients.length > 0) {
+                            const patient = data.patients[0];
+                            return fetch('/api/remove_patient', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json'
+                                },
+                                body: JSON.stringify({ patient_id: patient.id })
+                            });
+                        }
+                    })
+                    .finally(() => {
+                        // Always redirect regardless of success/failure
+                        window.location.href = '/modules';
+                    });
             }
         }
 
@@ -623,7 +644,29 @@
             // Start continuous voice listening
             startContinuousVoiceListening();
             
+            // Start video feed refresh
+            startVideoRefresh();
+            
             showNotification('Monitoring started - System is now active');
+        }
+        
+        function startVideoRefresh() {
+            const videoFeed = document.getElementById('videoFeed');
+            
+            function refreshVideo() {
+                // Add timestamp to prevent caching
+                const timestamp = new Date().getTime();
+                videoFeed.src = `/video_feed?t=${timestamp}`;
+            }
+            
+            // Refresh video every 200ms for smooth experience
+            setInterval(refreshVideo, 200);
+            
+            // Handle image load errors
+            videoFeed.onerror = function() {
+                console.log('Video feed error, retrying...');
+                setTimeout(refreshVideo, 1000);
+            };
         }
 
         function startButtonPolling() {
@@ -809,13 +852,26 @@
                 });
         }
 
+
+
         // Toggle fullscreen function
         function toggleFullscreen() {
             if (!document.fullscreenElement) {
-                enterFullscreen();
+                const elem = document.documentElement;
+                if (elem.requestFullscreen) {
+                    elem.requestFullscreen().catch(err => console.log('Fullscreen request failed:', err));
+                } else if (elem.webkitRequestFullscreen) {
+                    elem.webkitRequestFullscreen();
+                } else if (elem.msRequestFullscreen) {
+                    elem.msRequestFullscreen();
+                }
             } else {
                 if (document.exitFullscreen) {
                     document.exitFullscreen().catch(err => console.log('Exit fullscreen failed:', err));
+                } else if (document.webkitExitFullscreen) {
+                    document.webkitExitFullscreen();
+                } else if (document.msExitFullscreen) {
+                    document.msExitFullscreen();
                 }
             }
         }

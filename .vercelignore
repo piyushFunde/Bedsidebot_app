@@ -1,0 +1,12 @@
+app.py
+app_simple.py
+run_bedsidebot.py
+diagnose.py
+test_*.py
+simple_camera.py
+requirements.txt
+*.bat
+*.md
+.env
+app_output.txt
+Bedsidebot/
