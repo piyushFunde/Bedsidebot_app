@@ -684,6 +684,10 @@
         <div class="dashboard-header">
             <h1 class="dashboard-title">ICU Patient Monitoring</h1>
             <p class="dashboard-subtitle">Real-time monitoring and alert system for patient care</p>
+            <div style="margin-top: 1rem;">
+                <button class="btn btn-secondary" onclick="window.open('/test/patients', '_blank')" style="margin-right: 1rem;">📋 Check Patients</button>
+                <button class="btn btn-secondary" onclick="testModal()">🧪 Test Modal</button>
+            </div>
         </div>
 
         <div class="patients-grid" id="patientsGrid">
@@ -774,12 +778,14 @@
                 return;
             }
 
-            grid.innerHTML = patients.map(patient => `
-                <div class="patient-card" id="patient-${patient.id}" onclick="viewPatientDetails('${patient.id}')">
+            grid.innerHTML = patients.map(patient => {
+                const patientId = patient.patient_id || patient.id;
+                return `
+                <div class="patient-card" id="patient-${patientId}" onclick="viewPatientDetails('${patientId}')">
                     <div class="patient-header">
                         <div class="patient-info">
-                            <div class="patient-id">Patient ID: ${patient.id} • Bed: ${patient.bed_number || 'N/A'}</div>
-                            <div class="patient-name">${patient.name}</div>
+                            <div class="patient-id">Patient ID: ${patientId} • Bed: ${patient.bed_number || 'N/A'}</div>
+                            <div class="patient-name">${patient.full_name || patient.name}</div>
                             <div class="patient-status status-monitoring">
                                 <span>🟡</span>
                                 Monitoring
@@ -788,18 +794,19 @@
                     </div>
                     <div class="last-activity">Last activity: ${patient.lastActivity || 'No recent activity'}</div>
                     <div class="patient-actions" onclick="event.stopPropagation()">
-                        <button class="action-btn btn-view" onclick="viewPatientDetails('${patient.id}')">
+                        <button class="action-btn btn-view" onclick="viewPatientDetails('${patientId}')">
                             👁️ View Details
                         </button>
-                        <button class="action-btn btn-print" onclick="printPatientReport('${patient.id}')">
+                        <button class="action-btn btn-print" onclick="printPatientReport('${patientId}')">
                             🖨️ Print Report
                         </button>
-                        <button class="action-btn btn-remove" onclick="removePatient('${patient.id}')">
+                        <button class="action-btn btn-remove" onclick="removePatient('${patientId}')">
                             🗑️ Remove
                         </button>
                     </div>
                 </div>
-            `).join('');
+            `;
+            }).join('');
         }
 
         function showNotification(patientName, bedNumber, requestType) {
@@ -915,25 +922,30 @@
 
         function viewPatientDetails(patientId) {
             currentPatientId = patientId;
+            console.log('Viewing patient details for ID:', patientId);
             
             fetch(`/api/patient/details/${patientId}`)
-                .then(response => response.json())
+                .then(response => {
+                    console.log('Response status:', response.status);
+                    return response.json();
+                })
                 .then(data => {
+                    console.log('Patient data received:', data);
                     if (data.status === 'success') {
                         displayPatientDetails(data.patient);
                         document.getElementById('patientModal').classList.add('show');
                     } else {
-                        alert('Failed to load patient details');
+                        alert('Failed to load patient details: ' + data.message);
                     }
                 })
                 .catch(error => {
                     console.error('Error loading patient details:', error);
-                    alert('Error loading patient details');
+                    alert('Error loading patient details. Check console for details.');
                 });
         }
 
         function displayPatientDetails(patient) {
-            document.getElementById('modalPatientName').textContent = patient.full_name;
+            document.getElementById('modalPatientName').textContent = patient.full_name || patient.name || 'Unknown Patient';
             
             const modalBody = document.getElementById('modalBody');
             modalBody.innerHTML = `
@@ -1030,7 +1042,7 @@
                     <div class="details-grid">
                         <div class="detail-item">
                             <div class="detail-label">Communication Methods</div>
-                            <div class="detail-value">${patient.communication_methods ? JSON.parse(patient.communication_methods).join(', ') : 'Not specified'}</div>
+                            <div class="detail-value">${patient.communication_methods ? (typeof patient.communication_methods === 'string' ? JSON.parse(patient.communication_methods).join(', ') : patient.communication_methods.join(', ')) : 'Not specified'}</div>
                         </div>
                     </div>
                     ${patient.communication_notes ? `
@@ -1140,6 +1152,32 @@
             }
         });
 
+        // Test modal function
+        function testModal() {
+            const testPatient = {
+                full_name: 'Test Patient',
+                patient_id: 'TEST001',
+                date_of_birth: '1980-01-01',
+                gender: 'Male',
+                blood_type: 'A+',
+                admission_date: '2024-01-01',
+                room_number: '101',
+                bed_number: 'A',
+                department: 'ICU',
+                care_level: 'Intensive',
+                assigned_nurse_id: 'N001',
+                primary_condition: 'Test Condition',
+                mobility_level: 'Limited',
+                attending_physician: 'Dr. Test',
+                medical_history: 'Test medical history',
+                communication_methods: ['voice', 'gestures'],
+                communication_notes: 'Test communication notes'
+            };
+            
+            displayPatientDetails(testPatient);
+            document.getElementById('patientModal').classList.add('show');
+        }
+        
         // Keyboard shortcuts
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') {
