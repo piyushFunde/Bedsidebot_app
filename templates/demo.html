@@ -166,8 +166,8 @@
 
         <div class="video-wrapper">
             <video class="demo-video" controls preload="metadata" id="mainVideo">
-                <source src="https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4" type="video/mp4">
-            <source src="/static/review_video_v1.mp4" type="video/mp4">
+                <source src="https://drive.google.com/uc?export=download&id=YOUR_VIDEO_ID_1" type="video/mp4">
+            <source src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4" type="video/mp4">
                 Your browser does not support the video tag.
             </video>
         </div>
@@ -223,9 +223,19 @@
             const source = video.querySelector('source');
             
             if (videoNumber === 1) {
-                source.src = '/static/review_video_v1.mp4';
+                // Use your actual video if available, fallback to demo
+                source.src = 'https://drive.google.com/uc?export=download&id=YOUR_VIDEO_ID_1';
+                source.onerror = function() {
+                    source.src = 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4';
+                    video.load();
+                };
             } else if (videoNumber === 2) {
-                source.src = '/static/demo_video_2.mp4';
+                // Use second video if available, fallback to demo
+                source.src = 'https://drive.google.com/uc?export=download&id=YOUR_VIDEO_ID_2';
+                source.onerror = function() {
+                    source.src = 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4';
+                    video.load();
+                };
             }
             
             video.load();

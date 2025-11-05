@@ -1,0 +1,2 @@
+Demo videos are hosted externally due to file size limits.
+Your actual BedsideBot demo videos will be loaded from cloud storage.
