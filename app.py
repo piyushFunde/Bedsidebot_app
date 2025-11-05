@@ -66,21 +66,29 @@ def hospital_registration():
 @app.route('/staff')
 def staff_registration():
     # Check if hospital registration is completed
-    if not registration_data.get('hospital'):
+    hospital_data = registration_data.get('hospital')
+    if not hospital_data or not hospital_data.get('hospitalName'):
         return redirect('/hospital')
     return render_template('staff.html')
 
 @app.route('/patient')
 def patient_registration():
     # Check if previous steps are completed
-    if not registration_data.get('hospital') or not registration_data.get('staff'):
+    hospital_data = registration_data.get('hospital')
+    staff_data = registration_data.get('staff')
+    if not hospital_data or not hospital_data.get('hospitalName') or not staff_data or len(staff_data) == 0:
         return redirect('/hospital')
     return render_template('patient.html')
 
 @app.route('/caregiver')
 def caregiver_registration():
     # Check if previous steps are completed
-    if not registration_data.get('hospital') or not registration_data.get('staff') or not registration_data.get('patients'):
+    hospital_data = registration_data.get('hospital')
+    staff_data = registration_data.get('staff')
+    patients_data = registration_data.get('patients')
+    if (not hospital_data or not hospital_data.get('hospitalName') or 
+        not staff_data or len(staff_data) == 0 or 
+        not patients_data or len(patients_data) == 0):
         return redirect('/hospital')
     return render_template('caregiver.html')
 
