@@ -827,6 +827,11 @@
                 isValid = false;
                 errorText = 'This field is required';
             }
+            // Check hospital ID uniqueness (basic validation)
+            else if (fieldId === 'hospitalId' && value && value.length < 3) {
+                isValid = false;
+                errorText = 'Hospital ID must be at least 3 characters';
+            }
             
             // Specific validations
             else if (fieldId === 'email' && value && !validationPatterns.email.test(value)) {
@@ -862,11 +867,19 @@
             return isValid;
         }
 
-        // Check if form is valid - Always return true for quick demo
+        // Check if form is valid
         function checkFormValidity() {
-            // Enable submit button always for demo
-            submitBtn.disabled = false;
-            return true;
+            let allValid = true;
+            
+            requiredFields.forEach(fieldId => {
+                const field = document.getElementById(fieldId);
+                if (field && !field.value.trim()) {
+                    allValid = false;
+                }
+            });
+            
+            submitBtn.disabled = !allValid;
+            return allValid;
         }
 
         // Add event listeners to all form fields
@@ -904,21 +917,70 @@
             });
         });
 
-        // Form submission - Skip validation for demo
+        // Form submission with validation
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
             
-            // Show success modal immediately
-            successModal.classList.add('show');
+            // Validate all required fields
+            let allValid = true;
+            requiredFields.forEach(fieldId => {
+                if (!validateField(fieldId)) {
+                    allValid = false;
+                }
+            });
             
-            // Redirect to staff registration quickly
-            setTimeout(() => {
-                window.location.href = '/staff';
-            }, 1000);
+            if (!allValid) {
+                alert('Please fill in all required fields correctly.');
+                return;
+            }
+            
+            // Collect form data
+            const formData = {
+                hospitalName: document.getElementById('hospitalName').value,
+                hospitalId: document.getElementById('hospitalId').value,
+                fullAddress: document.getElementById('fullAddress').value,
+                city: document.getElementById('city').value,
+                state: document.getElementById('state').value,
+                zipCode: document.getElementById('zipCode').value,
+                primaryPhone: document.getElementById('primaryPhone').value,
+                email: document.getElementById('email').value,
+                emergencyPhone: document.getElementById('emergencyPhone').value,
+                adminName: document.getElementById('adminName').value,
+                adminPhone: document.getElementById('adminPhone').value,
+                licenseNumber: document.getElementById('licenseNumber').value,
+                totalBeds: document.getElementById('totalBeds').value,
+                icuBeds: document.getElementById('icuBeds').value,
+                specialties: Array.from(document.querySelectorAll('input[name="specialties"]:checked')).map(cb => cb.value)
+            };
+            
+            try {
+                // Send data to backend
+                const response = await fetch('/api/register/hospital', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                });
+                
+                const result = await response.json();
+                
+                if (result.status === 'success') {
+                    // Show success modal
+                    successModal.classList.add('show');
+                    
+                    // Redirect to staff registration
+                    setTimeout(() => {
+                        window.location.href = '/staff';
+                    }, 1500);
+                } else {
+                    alert('Registration failed: ' + result.message);
+                }
+            } catch (error) {
+                console.error('Registration error:', error);
+                alert('Registration failed. Please try again.');
+            }
         });
-
-        // Enable submit button immediately for demo
-        submitBtn.disabled = false;
     </script>
 </body>
 </html>

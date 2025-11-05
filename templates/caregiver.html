@@ -833,11 +833,19 @@
             return isValid;
         }
 
-        // Check if form is valid - Always return true for quick demo
+        // Check if form is valid
         function checkFormValidity() {
-            // Enable submit button always for demo
-            submitBtn.disabled = false;
-            return true;
+            let allValid = true;
+            
+            requiredFields.forEach(fieldId => {
+                const field = document.getElementById(fieldId);
+                if (field && !field.value.trim()) {
+                    allValid = false;
+                }
+            });
+            
+            submitBtn.disabled = !allValid;
+            return allValid;
         }
 
         // Add event listeners to all form fields
@@ -850,21 +858,75 @@
             }
         });
 
-        // Form submission - Skip validation for demo
+        // Form submission with validation
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
             
-            // Show success modal immediately
-            successModal.classList.add('show');
+            // Validate all required fields
+            let allValid = true;
+            requiredFields.forEach(fieldId => {
+                if (!validateField(fieldId)) {
+                    allValid = false;
+                }
+            });
             
-            // Redirect to module selection quickly
-            setTimeout(() => {
-                window.location.href = '/modules';
-            }, 1000);
+            if (!allValid) {
+                alert('Please fill in all required fields correctly.');
+                return;
+            }
+            
+            // Collect form data
+            const formData = {
+                fullName: document.getElementById('fullName').value,
+                caregiverId: document.getElementById('caregiverId').value,
+                relationship: document.getElementById('relationship').value,
+                dateOfBirth: document.getElementById('dateOfBirth').value,
+                gender: document.getElementById('gender').value,
+                primaryPhone: document.getElementById('primaryPhone').value,
+                email: document.getElementById('email').value,
+                secondaryPhone: document.getElementById('secondaryPhone').value,
+                emergencyPhone: document.getElementById('emergencyPhone').value,
+                address: document.getElementById('address').value,
+                accessLevel: document.getElementById('accessLevel').value,
+                notifications: document.getElementById('notifications').value,
+                contactMethod: document.getElementById('contactMethod').value,
+                decisionMaking: document.getElementById('decisionMaking').value,
+                availability: document.getElementById('availability').value,
+                language: document.getElementById('language').value,
+                specialNotes: document.getElementById('specialNotes').value
+            };
+            
+            try {
+                // Send data to backend
+                const response = await fetch('/api/register/caregiver', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                });
+                
+                const result = await response.json();
+                
+                if (result.status === 'success') {
+                    // Show success modal
+                    successModal.classList.add('show');
+                    
+                    // Redirect to module selection
+                    setTimeout(() => {
+                        window.location.href = '/modules';
+                    }, 1500);
+                } else {
+                    alert('Registration failed: ' + result.message);
+                }
+            } catch (error) {
+                console.error('Registration error:', error);
+                alert('Registration failed. Please try again.');
+            }
         });
-
-        // Enable submit button immediately for demo
-        submitBtn.disabled = false;
+        
+        // Initial form validation check
+        checkFormValidity();
     </script>
 </body>
 </html>

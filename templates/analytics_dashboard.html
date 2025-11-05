@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BedsideBot Analytics Dashboard</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f7fa;
+            color: #333;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 1rem 2rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .header h1 { font-size: 1.8rem; margin-bottom: 0.5rem; }
+        .header p { opacity: 0.9; }
+        .container { max-width: 1400px; margin: 0 auto; padding: 2rem; }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        .stat-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        .stat-number { font-size: 2rem; font-weight: bold; color: #667eea; margin-bottom: 0.5rem; }
+        .stat-label { color: #666; font-size: 0.9rem; }
+        .charts-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+        .chart-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .chart-title { font-size: 1.2rem; margin-bottom: 1rem; color: #333; }
+        .patients-section {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .patients-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+        .patient-card {
+            border: 1px solid #e1e5e9;
+            border-radius: 8px;
+            padding: 1rem;
+            transition: transform 0.2s;
+        }
+        .patient-card:hover { transform: translateY(-2px); box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        .patient-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; }
+        .patient-name { font-weight: 600; color: #333; }
+        .patient-id { font-size: 0.8rem; color: #666; }
+        .patient-details { font-size: 0.85rem; color: #666; margin-bottom: 0.5rem; }
+        .patient-condition { font-size: 0.8rem; color: #e67e22; font-weight: 500; }
+        .print-btn {
+            background: #27ae60;
+            color: white;
+            border: none;
+            padding: 0.4rem 0.8rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            margin-top: 0.5rem;
+        }
+        .print-btn:hover { background: #229954; }
+        @media (max-width: 768px) {
+            .charts-section { grid-template-columns: 1fr; }
+            .container { padding: 1rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🏥 BedsideBot Analytics Dashboard</h1>
+        <p>Real-time patient monitoring and analytics system</p>
+    </div>
+
+    <div class="container">
+        <!-- Statistics Cards -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-number" id="totalPatients">0</div>
+                <div class="stat-label">Total Patients</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="activeMonitoring">0</div>
+                <div class="stat-label">Active Monitoring</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="todayRequests">0</div>
+                <div class="stat-label">Today's Requests</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="emergencyRequests">0</div>
+                <div class="stat-label">Emergency Alerts</div>
+            </div>
+        </div>
+
+        <!-- Charts Section -->
+        <div class="charts-section">
+            <div class="chart-card">
+                <div class="chart-title">Request Types Today</div>
+                <canvas id="requestChart" width="400" height="200"></canvas>
+            </div>
+            <div class="chart-card">
+                <div class="chart-title">Recent Activity</div>
+                <div id="recentActivity"></div>
+            </div>
+        </div>
+
+        <!-- Patients Section -->
+        <div class="patients-section">
+            <h2>Patient Overview</h2>
+            <div class="patients-grid" id="patientsGrid"></div>
+        </div>
+    </div>
+
+    <script>
+        // Load dashboard data
+        async function loadDashboardData() {
+            try {
+                const response = await fetch('/api/analytics/dashboard');
+                const result = await response.json();
+                
+                if (result.status === 'success') {
+                    updateStatistics(result.data);
+                    updateRecentActivity(result.data.recent_requests);
+                }
+            } catch (error) {
+                console.error('Error loading dashboard data:', error);
+            }
+        }
+
+        // Load patients data
+        async function loadPatientsData() {
+            try {
+                const response = await fetch('/api/get_patients');
+                const result = await response.json();
+                
+                if (result.status === 'success') {
+                    displayPatients(result.patients);
+                }
+            } catch (error) {
+                console.error('Error loading patients:', error);
+            }
+        }
+
+        function updateStatistics(data) {
+            document.getElementById('totalPatients').textContent = data.total_patients;
+            document.getElementById('activeMonitoring').textContent = data.active_monitoring;
+            document.getElementById('todayRequests').textContent = data.today_requests;
+            document.getElementById('emergencyRequests').textContent = data.emergency_requests;
+        }
+
+        function updateRecentActivity(requests) {
+            const container = document.getElementById('recentActivity');
+            container.innerHTML = '';
+            
+            if (requests.length === 0) {
+                container.innerHTML = '<p style="color: #666; text-align: center;">No recent activity</p>';
+                return;
+            }
+            
+            requests.forEach(req => {
+                const item = document.createElement('div');
+                item.style.cssText = 'padding: 0.5rem; border-bottom: 1px solid #eee; font-size: 0.85rem;';
+                item.innerHTML = `
+                    <strong>${req.patient_name}</strong> - ${req.request_type}
+                    <div style="color: #666; font-size: 0.8rem;">${req.timestamp} via ${req.method}</div>
+                `;
+                container.appendChild(item);
+            });
+        }
+
+        function displayPatients(patients) {
+            const grid = document.getElementById('patientsGrid');
+            grid.innerHTML = '';
+            
+            patients.forEach(patient => {
+                const card = document.createElement('div');
+                card.className = 'patient-card';
+                card.innerHTML = `
+                    <div class="patient-header">
+                        <div class="patient-name">${patient.fullName || patient.name}</div>
+                        <div class="patient-id">ID: ${patient.patientId || patient.id}</div>
+                    </div>
+                    <div class="patient-details">
+                        Room: ${patient.roomNumber || 'N/A'} | Bed: ${patient.bedNumber || patient.bed_number}
+                    </div>
+                    <div class="patient-condition">
+                        Condition: ${patient.primaryCondition || 'N/A'}
+                    </div>
+                    <button class="print-btn" onclick="generatePatientReport('${patient.patientId || patient.id}')">
+                        📄 Print Report
+                    </button>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        // Generate patient report
+        async function generatePatientReport(patientId) {
+            try {
+                const response = await fetch(`/api/patient/report/${patientId}`);
+                const result = await response.json();
+                
+                if (result.status === 'success') {
+                    openPrintWindow(result.report);
+                } else {
+                    alert('Error generating report: ' + result.message);
+                }
+            } catch (error) {
+                console.error('Error generating report:', error);
+                alert('Error generating report. Please try again.');
+            }
+        }
+
+        function openPrintWindow(reportData) {
+            const printWindow = window.open('', '_blank');
+            printWindow.document.write(reportData);
+            printWindow.document.close();
+            printWindow.focus();
+            setTimeout(() => {
+                printWindow.print();
+            }, 500);
+        }
+
+        // Initialize dashboard
+        document.addEventListener('DOMContentLoaded', function() {
+            loadDashboardData();
+            loadPatientsData();
+            
+            // Refresh data every 30 seconds
+            setInterval(() => {
+                loadDashboardData();
+                loadPatientsData();
+            }, 30000);
+        });
+    </script>
+</body>
+</html>

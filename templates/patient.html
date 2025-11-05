@@ -912,12 +912,11 @@
             return isValid;
         }
 
-        // Check if form is valid - Require essential fields for ICU dashboard
+        // Check if form is valid
         function checkFormValidity() {
-            const requiredForICU = ['fullName', 'patientId', 'bedNumber', 'primaryCondition'];
             let allValid = true;
             
-            requiredForICU.forEach(fieldId => {
+            requiredFields.forEach(fieldId => {
                 const field = document.getElementById(fieldId);
                 if (field && !field.value.trim()) {
                     allValid = false;
@@ -965,9 +964,22 @@
             });
         });
 
-        // Form submission - Collect and send patient data
+        // Form submission with validation
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
+            
+            // Validate all required fields
+            let allValid = true;
+            requiredFields.forEach(fieldId => {
+                if (!validateField(fieldId)) {
+                    allValid = false;
+                }
+            });
+            
+            if (!allValid) {
+                alert('Please fill in all required fields correctly.');
+                return;
+            }
             
             // Collect form data
             const formData = {
@@ -1019,8 +1031,8 @@
             }
         });
 
-        // Enable submit button immediately for demo
-        submitBtn.disabled = false;
+        // Initial form validation check
+        checkFormValidity();
     </script>
 </body>
 </html>

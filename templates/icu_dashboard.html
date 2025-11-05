@@ -146,6 +146,7 @@
             box-shadow: var(--shadow);
             border-left: 4px solid var(--success-green);
             transition: all 0.3s ease;
+            cursor: pointer;
         }
 
         .patient-card:hover {
@@ -211,6 +212,192 @@
             font-size: 0.75rem;
             color: var(--text-light);
             margin-top: 0.5rem;
+        }
+
+        .patient-actions {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .action-btn {
+            padding: 0.4rem 0.8rem;
+            font-size: 0.75rem;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .btn-view {
+            background: var(--primary-blue);
+            color: white;
+        }
+
+        .btn-print {
+            background: var(--success-green);
+            color: white;
+        }
+
+        .btn-remove {
+            background: var(--danger-red);
+            color: white;
+        }
+
+        .action-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+        }
+
+        /* Patient Details Modal */
+        .patient-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.3s ease;
+        }
+
+        .patient-modal.show {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .modal-content {
+            background: var(--soft-white);
+            border-radius: 16px;
+            max-width: 900px;
+            width: 95%;
+            max-height: 90vh;
+            overflow-y: auto;
+            transform: scale(0.8);
+            transition: all 0.3s ease;
+            box-shadow: 0 20px 50px -10px rgba(0, 0, 0, 0.3);
+        }
+
+        .patient-modal.show .modal-content {
+            transform: scale(1);
+        }
+
+        .modal-header {
+            background: linear-gradient(135deg, var(--primary-blue), var(--secondary-blue));
+            color: white;
+            padding: 2rem;
+            border-radius: 16px 16px 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-title {
+            font-family: 'Poppins', sans-serif;
+            font-size: 1.75rem;
+            font-weight: 700;
+            margin: 0;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: 0.5rem;
+            border-radius: 50%;
+            transition: all 0.3s ease;
+        }
+
+        .modal-close:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .modal-body {
+            padding: 2rem;
+        }
+
+        .details-section {
+            margin-bottom: 2rem;
+        }
+
+        .section-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--text-dark);
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid var(--light-blue);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .details-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+        }
+
+        .detail-item {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .detail-label {
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--text-light);
+        }
+
+        .detail-value {
+            font-size: 1rem;
+            color: var(--text-dark);
+            font-weight: 500;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            padding: 1.5rem 2rem;
+            border-top: 1px solid var(--border-light);
+        }
+
+        .modal-btn {
+            padding: 0.75rem 2rem;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: none;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-print-report {
+            background: var(--success-green);
+            color: white;
+        }
+
+        .btn-close-modal {
+            background: var(--border-light);
+            color: var(--text-dark);
+        }
+
+        .modal-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow);
         }
 
         .notification-overlay {
@@ -436,6 +623,33 @@
             .notification-actions {
                 flex-direction: column;
             }
+
+            .modal-content {
+                width: 98%;
+                margin: 1%;
+            }
+
+            .modal-header {
+                padding: 1.5rem;
+            }
+
+            .modal-body {
+                padding: 1.5rem;
+            }
+
+            .details-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .modal-actions {
+                flex-direction: column;
+                padding: 1rem 1.5rem;
+            }
+
+            .patient-actions {
+                flex-direction: column;
+                gap: 0.25rem;
+            }
         }
     </style>
 </head>
@@ -501,6 +715,27 @@
         </div>
     </div>
 
+    <!-- Patient Details Modal -->
+    <div class="patient-modal" id="patientModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title" id="modalPatientName">Patient Details</h2>
+                <button class="modal-close" onclick="closePatientModal()">&times;</button>
+            </div>
+            <div class="modal-body" id="modalBody">
+                <!-- Patient details will be loaded here -->
+            </div>
+            <div class="modal-actions">
+                <button class="modal-btn btn-print-report" onclick="printCurrentPatientReport()">
+                    🖨️ Print Report
+                </button>
+                <button class="modal-btn btn-close-modal" onclick="closePatientModal()">
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+
     <script>
         let patients = [];
         let activityLog = [];
@@ -540,7 +775,7 @@
             }
 
             grid.innerHTML = patients.map(patient => `
-                <div class="patient-card" id="patient-${patient.id}">
+                <div class="patient-card" id="patient-${patient.id}" onclick="viewPatientDetails('${patient.id}')">
                     <div class="patient-header">
                         <div class="patient-info">
                             <div class="patient-id">Patient ID: ${patient.id} • Bed: ${patient.bed_number || 'N/A'}</div>
@@ -550,9 +785,19 @@
                                 Monitoring
                             </div>
                         </div>
-                        <button class="btn btn-secondary" onclick="removePatient('${patient.id}')" style="padding: 0.5rem 1rem; font-size: 0.8rem;">Remove</button>
                     </div>
                     <div class="last-activity">Last activity: ${patient.lastActivity || 'No recent activity'}</div>
+                    <div class="patient-actions" onclick="event.stopPropagation()">
+                        <button class="action-btn btn-view" onclick="viewPatientDetails('${patient.id}')">
+                            👁️ View Details
+                        </button>
+                        <button class="action-btn btn-print" onclick="printPatientReport('${patient.id}')">
+                            🖨️ Print Report
+                        </button>
+                        <button class="action-btn btn-remove" onclick="removePatient('${patient.id}')">
+                            🗑️ Remove
+                        </button>
+                    </div>
                 </div>
             `).join('');
         }
@@ -666,6 +911,168 @@
             renderLog();
         }
 
+        let currentPatientId = null;
+
+        function viewPatientDetails(patientId) {
+            currentPatientId = patientId;
+            
+            fetch(`/api/patient/details/${patientId}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        displayPatientDetails(data.patient);
+                        document.getElementById('patientModal').classList.add('show');
+                    } else {
+                        alert('Failed to load patient details');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading patient details:', error);
+                    alert('Error loading patient details');
+                });
+        }
+
+        function displayPatientDetails(patient) {
+            document.getElementById('modalPatientName').textContent = patient.full_name;
+            
+            const modalBody = document.getElementById('modalBody');
+            modalBody.innerHTML = `
+                <div class="details-section">
+                    <div class="section-title">
+                        👤 Personal Information
+                    </div>
+                    <div class="details-grid">
+                        <div class="detail-item">
+                            <div class="detail-label">Full Name</div>
+                            <div class="detail-value">${patient.full_name}</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Patient ID</div>
+                            <div class="detail-value">${patient.patient_id}</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Date of Birth</div>
+                            <div class="detail-value">${patient.date_of_birth || 'N/A'}</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Gender</div>
+                            <div class="detail-value">${patient.gender || 'N/A'}</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Blood Type</div>
+                            <div class="detail-value">${patient.blood_type || 'N/A'}</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Admission Date</div>
+                            <div class="detail-value">${patient.admission_date || 'N/A'}</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="details-section">
+                    <div class="section-title">
+                        🏥 Hospital Assignment
+                    </div>
+                    <div class="details-grid">
+                        <div class="detail-item">
+                            <div class="detail-label">Room Number</div>
+                            <div class="detail-value">${patient.room_number}</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Bed Number</div>
+                            <div class="detail-value">${patient.bed_number}</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Department</div>
+                            <div class="detail-value">${patient.department}</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Care Level</div>
+                            <div class="detail-value">${patient.care_level}</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Assigned Nurse</div>
+                            <div class="detail-value">${patient.assigned_nurse_id || 'N/A'}</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="details-section">
+                    <div class="section-title">
+                        🩺 Medical Information
+                    </div>
+                    <div class="details-grid">
+                        <div class="detail-item">
+                            <div class="detail-label">Primary Condition</div>
+                            <div class="detail-value">${patient.primary_condition}</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Mobility Level</div>
+                            <div class="detail-value">${patient.mobility_level || 'N/A'}</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Attending Physician</div>
+                            <div class="detail-value">${patient.attending_physician || 'N/A'}</div>
+                        </div>
+                    </div>
+                    ${patient.medical_history ? `
+                        <div style="margin-top: 1rem;">
+                            <div class="detail-label">Medical History</div>
+                            <div class="detail-value" style="margin-top: 0.5rem; padding: 1rem; background: #f8f9fa; border-radius: 8px;">${patient.medical_history}</div>
+                        </div>
+                    ` : ''}
+                </div>
+                
+                <div class="details-section">
+                    <div class="section-title">
+                        💬 Communication Preferences
+                    </div>
+                    <div class="details-grid">
+                        <div class="detail-item">
+                            <div class="detail-label">Communication Methods</div>
+                            <div class="detail-value">${patient.communication_methods ? JSON.parse(patient.communication_methods).join(', ') : 'Not specified'}</div>
+                        </div>
+                    </div>
+                    ${patient.communication_notes ? `
+                        <div style="margin-top: 1rem;">
+                            <div class="detail-label">Communication Notes</div>
+                            <div class="detail-value" style="margin-top: 0.5rem; padding: 1rem; background: #f8f9fa; border-radius: 8px;">${patient.communication_notes}</div>
+                        </div>
+                    ` : ''}
+                </div>
+            `;
+        }
+
+        function closePatientModal() {
+            document.getElementById('patientModal').classList.remove('show');
+            currentPatientId = null;
+        }
+
+        function printPatientReport(patientId) {
+            fetch(`/api/patient/report/${patientId}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        const printWindow = window.open('', '_blank');
+                        printWindow.document.write(data.report);
+                        printWindow.document.close();
+                        printWindow.focus();
+                    } else {
+                        alert('Failed to generate report');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error generating report:', error);
+                    alert('Error generating report');
+                });
+        }
+
+        function printCurrentPatientReport() {
+            if (currentPatientId) {
+                printPatientReport(currentPatientId);
+            }
+        }
+
         function removePatient(patientId) {
             if (confirm('Are you sure you want to remove this patient from monitoring?')) {
                 fetch('/api/remove_patient', {
@@ -736,6 +1143,21 @@
         document.getElementById('notificationOverlay').addEventListener('click', (e) => {
             if (e.target.id === 'notificationOverlay') {
                 closeNotification();
+            }
+        });
+
+        // Close patient modal when clicking outside
+        document.getElementById('patientModal').addEventListener('click', (e) => {
+            if (e.target.id === 'patientModal') {
+                closePatientModal();
+            }
+        });
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                closeNotification();
+                closePatientModal();
             }
         });
 

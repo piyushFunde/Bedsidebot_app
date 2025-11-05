@@ -812,11 +812,19 @@
             return isValid;
         }
 
-        // Check if form is valid - Always return true for quick demo
+        // Check if form is valid
         function checkFormValidity() {
-            // Enable submit button always for demo
-            submitBtn.disabled = false;
-            return true;
+            let allValid = true;
+            
+            requiredFields.forEach(fieldId => {
+                const field = document.getElementById(fieldId);
+                if (field && !field.value.trim()) {
+                    allValid = false;
+                }
+            });
+            
+            submitBtn.disabled = !allValid;
+            return allValid;
         }
 
         // Add event listeners to all form fields
@@ -838,21 +846,71 @@
             }
         });
 
-        // Form submission - Skip validation for demo
+        // Form submission with validation
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
             
-            // Show success modal immediately
-            successModal.classList.add('show');
+            // Validate all required fields
+            let allValid = true;
+            requiredFields.forEach(fieldId => {
+                if (!validateField(fieldId)) {
+                    allValid = false;
+                }
+            });
             
-            // Redirect to patient registration quickly
-            setTimeout(() => {
-                window.location.href = '/patient';
-            }, 1000);
+            if (!allValid) {
+                alert('Please fill in all required fields correctly.');
+                return;
+            }
+            
+            // Collect form data
+            const formData = {
+                fullName: document.getElementById('fullName').value,
+                employeeId: document.getElementById('employeeId').value,
+                role: document.getElementById('role').value,
+                department: document.getElementById('department').value,
+                shift: document.getElementById('shift').value,
+                phoneNumber: document.getElementById('phoneNumber').value,
+                email: document.getElementById('email').value,
+                emergencyContact: document.getElementById('emergencyContact').value,
+                emergencyPhone: document.getElementById('emergencyPhone').value,
+                relationship: document.getElementById('relationship').value,
+                licenseNumber: document.getElementById('licenseNumber').value,
+                experience: document.getElementById('experience').value,
+                startDate: document.getElementById('startDate').value,
+                employmentStatus: document.getElementById('employmentStatus').value,
+                accessLevel: document.getElementById('accessLevel').value,
+                notifications: document.getElementById('notifications').value
+            };
+            
+            try {
+                // Send data to backend
+                const response = await fetch('/api/register/staff', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                });
+                
+                const result = await response.json();
+                
+                if (result.status === 'success') {
+                    // Show success modal
+                    successModal.classList.add('show');
+                    
+                    // Redirect to patient registration
+                    setTimeout(() => {
+                        window.location.href = '/patient';
+                    }, 1500);
+                } else {
+                    alert('Registration failed: ' + result.message);
+                }
+            } catch (error) {
+                console.error('Registration error:', error);
+                alert('Registration failed. Please try again.');
+            }
         });
-
-        // Enable submit button immediately for demo
-        submitBtn.disabled = false;
     </script>
 </body>
 </html>
