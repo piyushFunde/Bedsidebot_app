@@ -1,5 +1,5 @@
 [phases.setup]
-nixPkgs = ['python39', 'libGL', 'glib', 'libxext', 'libSM', 'libxrender']
+nixPkgs = ['python39']
 
 [phases.install]
 cmds = ['pip install -r requirements.txt']
@@ -8,4 +8,4 @@ cmds = ['pip install -r requirements.txt']
 cmds = ['echo "Build complete"']
 
 [start]
-cmd = 'python app.py'
+cmd = 'python app_cloud.py'
