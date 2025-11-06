@@ -170,6 +170,11 @@ def static_files(filename):
 def health_check():
     return "OK", 200
 
+# Favicon route to prevent 404 errors
+@app.route('/favicon.ico')
+def favicon():
+    return '', 204
+
 # Browser camera access page
 @app.route('/camera')
 def camera_access():
