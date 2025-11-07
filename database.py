@@ -231,19 +231,16 @@ class Caregiver(db.Model):
     __tablename__ = 'caregivers'
     
     id = db.Column(db.Integer, primary_key=True)
+    caregiver_id = db.Column(db.String(50), unique=True, nullable=False)
     full_name = db.Column(db.String(100), nullable=False)
-    relationship = db.Column(db.String(50))  # family, friend, guardian
-    phone = db.Column(db.String(20))
-    email = db.Column(db.String(100))
-    address = db.Column(db.Text)
-    emergency_contact = db.Column(db.Boolean, default=False)
-    
-    # Associated Patients
-    patient_ids = db.Column(db.Text)  # JSON string of patient IDs
-    
-    # Notification Preferences
-    notification_methods = db.Column(db.Text)  # JSON string
-    notification_schedule = db.Column(db.Text)  # JSON string
+    relationship = db.Column(db.String(50), nullable=False)
+    primary_phone = db.Column(db.String(20), nullable=False)
+    email = db.Column(db.String(100), nullable=False)
+    access_level = db.Column(db.String(50), nullable=False)
+    contact_method = db.Column(db.String(20), nullable=False)  # email, sms, both
+    notifications_enabled = db.Column(db.Boolean, default=True)
+    decision_making = db.Column(db.String(50))
+    availability = db.Column(db.String(100))
     
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     is_active = db.Column(db.Boolean, default=True)
@@ -251,15 +248,16 @@ class Caregiver(db.Model):
     def to_dict(self):
         return {
             'id': self.id,
-            'full_name': self.full_name,
+            'caregiverId': self.caregiver_id,
+            'fullName': self.full_name,
             'relationship': self.relationship,
-            'phone': self.phone,
+            'primaryPhone': self.primary_phone,
             'email': self.email,
-            'address': self.address,
-            'emergency_contact': self.emergency_contact,
-            'patient_ids': json.loads(self.patient_ids) if self.patient_ids else [],
-            'notification_methods': json.loads(self.notification_methods) if self.notification_methods else [],
-            'notification_schedule': json.loads(self.notification_schedule) if self.notification_schedule else {},
+            'accessLevel': self.access_level,
+            'contactMethod': self.contact_method,
+            'notifications': self.notifications_enabled,
+            'decisionMaking': self.decision_making,
+            'availability': self.availability,
             'created_at': self.created_at.isoformat(),
             'is_active': self.is_active
         }

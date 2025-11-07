@@ -10,7 +10,10 @@ from dotenv import load_dotenv
 # from security import security, require_auth, validate_patient_data, sanitize_patient_data, log_security_event
 from database import db, init_database, Hospital, Staff, Patient, PatientRequest, MonitoringSession, Caregiver, SystemAnalytics, get_patient_request_patterns
 from analytics_routes import analytics_bp
-from notifications import notify_caregivers
+try:
+    from notifications import notify_caregivers
+except ImportError:
+    from demo_notifications import notify_caregivers_demo as notify_caregivers
 
 # Load environment variables
 load_dotenv()
@@ -330,8 +333,13 @@ def get_patients():
 def get_caregivers():
     """Get list of registered caregivers"""
     try:
-        caregivers = registration_data.get('caregivers', [])
-        return jsonify({"status": "success", "caregivers": caregivers})
+        # Get from both memory and database
+        memory_caregivers = registration_data.get('caregivers', [])
+        db_caregivers = Caregiver.query.all()
+        
+        all_caregivers = memory_caregivers + [cg.to_dict() for cg in db_caregivers]
+        
+        return jsonify({"status": "success", "caregivers": all_caregivers})
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 500
 
@@ -339,13 +347,18 @@ def get_caregivers():
 def test_notification():
     """Test notification system"""
     try:
-        caregivers = registration_data.get('caregivers', [])
-        if not caregivers:
-            return jsonify({"status": "error", "message": "No caregivers registered"}), 400
+        # Get all registered caregivers
+        memory_caregivers = registration_data.get('caregivers', [])
+        db_caregivers = Caregiver.query.filter_by(notifications_enabled=True).all()
+        
+        all_caregivers = memory_caregivers + [cg.to_dict() for cg in db_caregivers]
+        
+        if not all_caregivers:
+            return jsonify({"status": "error", "message": "No caregivers registered. Please register a caregiver first."}), 400
         
         # Send test notification
         success = notify_caregivers(
-            caregivers,
+            all_caregivers,
             "Test Patient",
             2,  # Water request
             "101",
@@ -353,7 +366,7 @@ def test_notification():
         )
         
         if success:
-            return jsonify({"status": "success", "message": "Test notifications sent successfully"})
+            return jsonify({"status": "success", "message": f"Test notifications sent to {len(all_caregivers)} caregivers"})
         else:
             return jsonify({"status": "error", "message": "Failed to send notifications"}), 500
             
@@ -512,16 +525,21 @@ def set_button_internal(button, method, message):
         
         # Send notifications to caregivers
         try:
-            caregivers = registration_data.get('caregivers', [])
-            if caregivers:
+            # Get all registered caregivers (from memory + database)
+            memory_caregivers = registration_data.get('caregivers', [])
+            db_caregivers = Caregiver.query.filter_by(notifications_enabled=True).all()
+            
+            all_caregivers = memory_caregivers + [cg.to_dict() for cg in db_caregivers]
+            
+            if all_caregivers:
                 notify_caregivers(
-                    caregivers,
+                    all_caregivers,
                     patient_info.get("name", "Unknown Patient"),
                     button,
                     patient_info.get("room_number", "N/A"),
                     patient_info.get("bed_number", "N/A")
                 )
-                print(f"[SUCCESS] Notifications sent to {len(caregivers)} caregivers")
+                print(f"[SUCCESS] Notifications sent to {len(all_caregivers)} caregivers")
             else:
                 print("[WARNING] No caregivers registered for notifications")
         except Exception as e:

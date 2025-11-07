@@ -164,13 +164,19 @@ def notify_caregivers(caregivers, patient_name, request_type, patient_room, pati
     """Send notifications to all registered caregivers"""
     success_count = 0
     
+    # If no caregivers provided, get from database
+    if not caregivers:
+        from database import Caregiver
+        db_caregivers = Caregiver.query.filter_by(notifications_enabled=True).all()
+        caregivers = [cg.to_dict() for cg in db_caregivers]
+    
     for caregiver in caregivers:
         caregiver_name = caregiver.get('fullName', 'Unknown')
         caregiver_email = caregiver.get('email')
         caregiver_phone = caregiver.get('primaryPhone')
         contact_method = caregiver.get('contactMethod', 'both')
         
-        print(f"[INFO] Notifying caregiver: {caregiver_name}")
+        print(f"[INFO] Notifying caregiver: {caregiver_name} ({caregiver_phone}, {caregiver_email})")
         
         # Send email notification
         if contact_method in ['email', 'both'] and caregiver_email:
