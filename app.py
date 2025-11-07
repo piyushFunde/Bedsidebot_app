@@ -10,10 +10,8 @@ from dotenv import load_dotenv
 # from security import security, require_auth, validate_patient_data, sanitize_patient_data, log_security_event
 from database import db, init_database, Hospital, Staff, Patient, PatientRequest, MonitoringSession, Caregiver, SystemAnalytics, get_patient_request_patterns
 from analytics_routes import analytics_bp
-try:
-    from notifications import notify_caregivers
-except ImportError:
-    from demo_notifications import notify_caregivers_demo as notify_caregivers
+# Use instant notifications - works immediately for any user
+from instant_notifications import notify_caregivers_instant as notify_caregivers
 
 # Load environment variables
 load_dotenv()

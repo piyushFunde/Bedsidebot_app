@@ -599,18 +599,30 @@
                     <div class="form-section">
                         <div class="section-header">
                             <div class="section-icon">📞</div>
-                            <h2 class="section-title">Contact Information</h2>
+                            <h2 class="section-title">Contact Information & Notification Setup</h2>
+                        </div>
+                        <div class="notification-info" style="background: #e8f4fd; padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem; border-left: 4px solid #3b82f6;">
+                            <h4 style="color: #1e40af; margin-bottom: 0.5rem;">📱 Instant Notifications Setup</h4>
+                            <p style="color: #1e40af; font-size: 0.875rem; margin-bottom: 0.5rem;">Enter your phone number and email below to receive instant SMS and email alerts when patients make requests. No additional setup required!</p>
+                            <ul style="color: #1e40af; font-size: 0.875rem; margin-left: 1rem;">
+                                <li>✅ SMS alerts sent instantly to your phone</li>
+                                <li>✅ Email notifications to your inbox</li>
+                                <li>✅ Works immediately after registration</li>
+                                <li>✅ No verification or additional accounts needed</li>
+                            </ul>
                         </div>
                         <div class="form-row double">
                             <div class="form-group">
                                 <label class="form-label">Primary Phone <span class="required">*</span></label>
-                                <input type="tel" class="form-input" id="primaryPhone" placeholder="Enter primary phone number" required>
+                                <input type="tel" class="form-input" id="primaryPhone" placeholder="+919604226339 (SMS alerts will be sent here)" required>
                                 <div class="error-message">Valid phone number is required</div>
+                                <small style="color: #6b7280; font-size: 0.75rem;">📱 SMS notifications will be sent to this number instantly</small>
                             </div>
                             <div class="form-group">
                                 <label class="form-label">Email Address <span class="required">*</span></label>
-                                <input type="email" class="form-input" id="email" placeholder="Enter email address" required>
+                                <input type="email" class="form-input" id="email" placeholder="your.email@gmail.com (Email alerts sent here)" required>
                                 <div class="error-message">Valid email address is required</div>
+                                <small style="color: #6b7280; font-size: 0.75rem;">📧 Email notifications will be sent to this address instantly</small>
                             </div>
                         </div>
                         <div class="form-row double">
@@ -628,6 +640,11 @@
                                 <label class="form-label">Address</label>
                                 <input type="text" class="form-input" id="address" placeholder="Enter home address">
                             </div>
+                        </div>
+                        <div class="test-notification" style="background: #f0fdf4; padding: 1rem; border-radius: 8px; margin-top: 1rem; border-left: 4px solid #10b981;">
+                            <h4 style="color: #059669; margin-bottom: 0.5rem;">🧪 Test Notifications</h4>
+                            <p style="color: #059669; font-size: 0.875rem; margin-bottom: 0.5rem;">After registration, you can test the notification system to ensure you receive alerts.</p>
+                            <button type="button" id="testNotificationBtn" style="background: #10b981; color: white; border: none; padding: 0.5rem 1rem; border-radius: 6px; font-size: 0.875rem; cursor: pointer;" disabled>Test Notifications (Available after registration)</button>
                         </div>
                     </div>
 
@@ -665,14 +682,12 @@
                         </div>
                         <div class="form-row double">
                             <div class="form-group">
-                                <label class="form-label">Primary Contact Method <span class="required">*</span></label>
+                                <label class="form-label">Notification Method <span class="required">*</span></label>
                                 <select class="form-select" id="contactMethod" required>
-                                    <option value="" disabled selected>Select contact method</option>
-                                    <option value="phone">Phone Call</option>
-                                    <option value="sms">SMS/Text Message</option>
-                                    <option value="email">Email</option>
-                                    <option value="app">Mobile App Notification</option>
-                                    <option value="multiple">Multiple Methods</option>
+                                    <option value="" disabled selected>How do you want to receive alerts?</option>
+                                    <option value="sms">SMS Only - Text messages to my phone</option>
+                                    <option value="email">Email Only - Email notifications</option>
+                                    <option value="both">Both SMS & Email - Maximum coverage (Recommended)</option>
                                 </select>
                                 <div class="error-message">Please select contact method</div>
                             </div>
