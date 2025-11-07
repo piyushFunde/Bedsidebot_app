@@ -1,0 +1,33 @@
+GITHUB SETUP COMMANDS
+====================
+
+After creating your GitHub repository, run these commands in your terminal:
+
+1. Add your GitHub repository as remote origin:
+   git remote add origin https://github.com/YOUR_USERNAME/YOUR_REPOSITORY_NAME.git
+
+2. Rename the default branch to main (if needed):
+   git branch -M main
+
+3. Push your code to GitHub:
+   git push -u origin main
+
+EXAMPLE (Replace with your actual GitHub username and repository name):
+   git remote add origin https://github.com/yourusername/bedsidebot-healthcare-system.git
+   git branch -M main
+   git push -u origin main
+
+ALTERNATIVE - If you prefer SSH (after setting up SSH keys):
+   git remote add origin git@github.com:YOUR_USERNAME/YOUR_REPOSITORY_NAME.git
+   git push -u origin main
+
+TROUBLESHOOTING:
+- If you get authentication errors, you may need to use a Personal Access Token instead of password
+- Go to GitHub Settings > Developer settings > Personal access tokens > Generate new token
+- Use the token as your password when prompted
+
+NEXT STEPS AFTER PUSHING:
+1. Update README_PERSONAL.md with your actual GitHub repository URL
+2. Configure any GitHub Actions or deployment settings if needed
+3. Add collaborators if this is a team project
+4. Set up branch protection rules if needed

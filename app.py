@@ -10,6 +10,7 @@ from dotenv import load_dotenv
 # from security import security, require_auth, validate_patient_data, sanitize_patient_data, log_security_event
 from database import db, init_database, Hospital, Staff, Patient, PatientRequest, MonitoringSession, Caregiver, SystemAnalytics, get_patient_request_patterns
 from analytics_routes import analytics_bp
+from notifications import notify_caregivers
 
 # Load environment variables
 load_dotenv()
@@ -53,6 +54,14 @@ patient_info = {"name": "", "bed_number": ""}
 
 # Active features
 active_features = set()
+
+# Default caregiver info (fallback)
+default_caregiver = {
+    'fullName': 'Rahul Pharande',
+    'primaryPhone': '+919604226339',
+    'email': 'rahulspharande28@gmail.com',
+    'contactMethod': 'both'
+}
 
 # Routes for the multi-page frontend
 @app.route('/')
@@ -123,6 +132,10 @@ def icu_dashboard():
 @app.route('/analytics')
 def analytics_dashboard():
     return render_template('analytics_dashboard.html')
+
+@app.route('/test_notifications')
+def test_notifications():
+    return render_template('test_notifications.html')
 
 @app.route('/static/<filename>')
 def static_files(filename):
@@ -264,6 +277,31 @@ def register_caregiver():
         if not data.get(field):
             return jsonify({"status": "error", "message": f"Missing required field: {field}"}), 400
     
+    # Save to database
+    try:
+        new_caregiver = Caregiver(
+            caregiver_id=data.get('caregiverId'),
+            full_name=data.get('fullName'),
+            relationship=data.get('relationship'),
+            primary_phone=data.get('primaryPhone'),
+            email=data.get('email'),
+            access_level=data.get('accessLevel'),
+            contact_method=data.get('contactMethod'),
+            notifications_enabled=data.get('notifications', True),
+            decision_making=data.get('decisionMaking'),
+            availability=data.get('availability')
+        )
+        
+        db.session.add(new_caregiver)
+        db.session.commit()
+        
+        print(f"[INFO] Caregiver {data.get('fullName')} registered with phone {data.get('primaryPhone')} and email {data.get('email')}")
+        
+    except Exception as e:
+        db.session.rollback()
+        print(f"[ERROR] Failed to save caregiver to database: {e}")
+    
+    # Also keep in memory for immediate use
     registration_data['caregivers'].append(data)
     return jsonify({"status": "success", "message": "Caregiver registered successfully"})
 
@@ -285,6 +323,40 @@ def get_patients():
             patient_list.append(patient_dict)
         
         return jsonify({"status": "success", "patients": patient_list})
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+@app.route('/api/get_caregivers', methods=['GET'])
+def get_caregivers():
+    """Get list of registered caregivers"""
+    try:
+        caregivers = registration_data.get('caregivers', [])
+        return jsonify({"status": "success", "caregivers": caregivers})
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+@app.route('/test_notification', methods=['POST'])
+def test_notification():
+    """Test notification system"""
+    try:
+        caregivers = registration_data.get('caregivers', [])
+        if not caregivers:
+            return jsonify({"status": "error", "message": "No caregivers registered"}), 400
+        
+        # Send test notification
+        success = notify_caregivers(
+            caregivers,
+            "Test Patient",
+            2,  # Water request
+            "101",
+            "A"
+        )
+        
+        if success:
+            return jsonify({"status": "success", "message": "Test notifications sent successfully"})
+        else:
+            return jsonify({"status": "error", "message": "Failed to send notifications"}), 500
+            
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 500
 
@@ -373,9 +445,47 @@ def get_selected_button():
 
 @app.route('/set_button', methods=['POST'])
 def set_button():
-    global selected_button, latest_request
+    """Handle gesture-based patient requests"""
     data = request.get_json()
     button = data.get("button")
+    
+    if button and 1 <= button <= 5:
+        button_names = ["Call Nurse", "Water", "Food", "Bathroom", "Emergency"]
+        action_name = button_names[button - 1]
+        return set_button_internal(button, 'gesture', f'Hand Gesture: {action_name}')
+    
+    return jsonify({"status": "error", "message": "Invalid gesture"})
+
+@app.route('/listen_voice', methods=['POST'])
+def listen_voice():
+    # Simulate voice recognition for demo
+    return jsonify({"status": "ready", "message": "Voice recognition ready (cloud mode)"})
+
+@app.route('/simulate_voice_request', methods=['POST'])
+def simulate_voice_request():
+    """Simulate voice request for testing notifications"""
+    data = request.get_json()
+    voice_command = data.get('command', '').lower()
+    
+    # Map voice commands to button numbers
+    voice_map = {
+        'nurse': 1,
+        'water': 2,
+        'food': 3,
+        'bathroom': 4,
+        'emergency': 5
+    }
+    
+    button = voice_map.get(voice_command)
+    if button:
+        # Use the same logic as set_button
+        return set_button_internal(button, 'voice', f'Voice Command: {voice_command}')
+    
+    return jsonify({"status": "error", "message": "Voice command not recognized"})
+
+def set_button_internal(button, method, message):
+    """Internal function to handle button requests from different sources"""
+    global selected_button, latest_request
     
     if button and 1 <= button <= 5:
         selected_button = button
@@ -387,8 +497,8 @@ def set_button():
             new_request = PatientRequest(
                 patient_id=patient_info.get("id", "UNKNOWN"),
                 request_type=button,
-                request_method='gesture',
-                request_message=f"Hand Gesture: {action_name}",
+                request_method=method,
+                request_message=message,
                 room_number=patient_info.get("room_number", "N/A"),
                 bed_number=patient_info.get("bed_number", "N/A"),
                 urgency_level='critical' if button == 5 else 'normal'
@@ -400,6 +510,23 @@ def set_button():
         except Exception as e:
             print(f"[ERROR] Failed to save request: {e}")
         
+        # Send notifications to caregivers
+        try:
+            caregivers = registration_data.get('caregivers', [])
+            if caregivers:
+                notify_caregivers(
+                    caregivers,
+                    patient_info.get("name", "Unknown Patient"),
+                    button,
+                    patient_info.get("room_number", "N/A"),
+                    patient_info.get("bed_number", "N/A")
+                )
+                print(f"[SUCCESS] Notifications sent to {len(caregivers)} caregivers")
+            else:
+                print("[WARNING] No caregivers registered for notifications")
+        except Exception as e:
+            print(f"[ERROR] Failed to send notifications: {e}")
+        
         # Update latest request for real-time dashboard
         latest_request = {
             "patientName": patient_info.get("name", "Unknown Patient"),
@@ -409,19 +536,14 @@ def set_button():
             "primaryCondition": patient_info.get("primary_condition", "N/A"),
             "requestType": button,
             "timestamp": time.time(),
-            "message": f"Hand Gesture: {action_name}",
-            "type": "gesture"
+            "message": message,
+            "type": method
         }
         
-        print(f"[NOTIFICATION] {patient_info.get('name', 'Patient')} - {action_name} (Gesture)")
+        print(f"[NOTIFICATION] {patient_info.get('name', 'Patient')} - {action_name} ({method})")
         return jsonify({"status": "success", "message": action_name})
     
-    return jsonify({"status": "error", "message": "Invalid gesture"})
-
-@app.route('/listen_voice', methods=['POST'])
-def listen_voice():
-    # Simulate voice recognition for demo
-    return jsonify({"status": "ready", "message": "Voice recognition ready (cloud mode)"})
+    return jsonify({"status": "error", "message": "Invalid request"})
 
 @app.route('/stop_monitoring', methods=['POST'])
 def stop_monitoring():
