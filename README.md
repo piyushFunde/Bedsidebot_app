@@ -8,7 +8,7 @@ BedsideBot is an advanced patient care system that uses multiple recognition tec
 - **Hand Sign Detection**: Use finger gestures (1-5 fingers) to select patient needs
 - **Voice Recognition**: Natural speech processing for voice commands
 - **Emotion Detection**: Facial emotion analysis for patient monitoring
-- **Eye Gaze Tracking**: Eye movement tracking for interface control
+- **Eye Gaze Tracking**: Eye movement tracking for interface control(in progress)
 
 ### Patient Communication Options
 1. **Call Nurse** - Request nursing assistance
