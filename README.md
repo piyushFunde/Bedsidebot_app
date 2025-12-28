@@ -180,7 +180,4 @@ For technical support or questions:
 - Review error messages in the browser console
 - Ensure all dependencies are properly installed
 - Verify camera and microphone permissions
-
-## License
-
-This project is for educational and healthcare purposes. Please ensure compliance with healthcare regulations (HIPAA, etc.) when deploying in production environments.
+  
