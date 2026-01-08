@@ -105,6 +105,7 @@ BedsideBot is an advanced patient care system that uses multiple recognition tec
 - **Eye Gaze**: Look left, right, or center to select options
 
 ### Use Case Diagram:
+<img width="1699" height="786" alt="Screenshot 2025-11-10 181952" src="https://github.com/user-attachments/assets/c4373a6d-5dda-4ec1-a4fb-8940e2c80d61" />
 
 
 ## API Endpoints
