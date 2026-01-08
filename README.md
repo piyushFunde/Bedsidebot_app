@@ -17,8 +17,6 @@ BedsideBot is an advanced patient care system that uses multiple recognition tec
 4. **Bathroom** - Request bathroom assistance
 5. **Emergency** - Emergency alert system
   
-### Use Case Diagram:
-
 ### Multi-Page Registration System
 - **Landing Page**: Introduction and system overview
 - **Hospital Registration**: Register healthcare facility
@@ -105,6 +103,9 @@ BedsideBot is an advanced patient care system that uses multiple recognition tec
 - **Voice Commands**: Say "water", "food", "nurse", "bathroom", or "emergency"
 - **Emotion Detection**: Automatic detection of patient emotions
 - **Eye Gaze**: Look left, right, or center to select options
+
+### Use Case Diagram:
+
 
 ## API Endpoints
 
