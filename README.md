@@ -2,6 +2,10 @@
 
 BedsideBot is an advanced patient care system that uses multiple recognition technologies including hand sign detection, voice recognition, emotion detection, and eye gaze tracking to help bedridden and physically disabled patients communicate their needs effectively.
 
+## Architecture diagram
+
+<img width="6428" height="4978" alt="diagram" src="https://github.com/user-attachments/assets/1747fb13-48e6-46b3-8ddb-c62839c49636" />
+
 ## Features
 
 ### Recognition Systems
