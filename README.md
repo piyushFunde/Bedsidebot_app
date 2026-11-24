@@ -6,7 +6,8 @@ BedsideBot is an advanced patient care system that uses multiple recognition tec
 
 <img width="6428" height="4978" alt="diagram" src="https://github.com/user-attachments/assets/1747fb13-48e6-46b3-8ddb-c62839c49636" />
 
-## Features
+---
+>Features
 
 ### Recognition Systems
 - **Hand Sign Detection**: Use finger gestures (1-5 fingers) to select patient needs
